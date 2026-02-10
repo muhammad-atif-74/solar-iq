@@ -51,3 +51,9 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+
+export const IMAGES = {
+  splash: require('../assets/images/home-illustrations.png'),
+  solarIQLogo: require('../assets/images/solariq-logo.png'),
+}

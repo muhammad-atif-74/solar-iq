@@ -1,0 +1,24 @@
+import React from 'react';
+import { ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+
+const CustomButton = ({ onPress, title = 'Click Me', isLoading = false, extraClasses }: { onPress: any, title: string, isLoading?: boolean , extraClasses?: any}) => {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.95}
+            className={`flex flex-row gap-2 justify-center bg-secondary-v1 px-8 py-4 rounded-xl shadow-lg shadow-secondary-v1/50 active:scale-95 ${extraClasses}`}
+            disabled={isLoading}
+        >
+            {
+                isLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : null
+            }
+            <Text className="text-white text-center font-semibold text-base">
+                {title}
+            </Text>
+        </TouchableOpacity>
+    );
+};
+
+export default CustomButton;
