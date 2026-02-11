@@ -6,7 +6,7 @@ const CustomButton = ({ onPress, title = 'Click Me', isLoading = false, extraCla
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.95}
-            className={`flex flex-row gap-2 justify-center bg-secondary-v1 px-8 py-4 rounded-xl shadow-lg shadow-secondary-v1/50 active:scale-95 ${extraClasses}`}
+            className={`flex flex-row gap-2 justify-center bg-secondary-v1 px-8 py-4 rounded-xl shadow-lg shadow-secondary-v1/50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${extraClasses}`}
             disabled={isLoading}
         >
             {

@@ -2,24 +2,29 @@ import { AppText } from '@/components/ui/app-text'
 import CustomButton from '@/components/ui/custom-button'
 import FormField from '@/components/ui/form-field'
 import { IMAGES } from '@/constants/theme'
+import { useGlobalContext } from '@/context/GlobalProvider'
+import { signIn } from '@/lib/supbase'
 import Feather from '@expo/vector-icons/Feather'
 import { router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import React, { useState } from 'react'
-import { Image, ScrollView, Text, View } from 'react-native'
+import { Alert, Image, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SignIn = () => {
+  const { setSession, setIsLoggedIn } = useGlobalContext();
+
   const [form, setForm] = useState({
     email: '',
     password: ''
   })
   const [errors, setErrors] = useState({
-      email: '',
-      password: ''
-    })
+    email: '',
+    password: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate form fields
     let valid = true;
     let newErrors = { email: '', password: '' };
@@ -42,8 +47,23 @@ const SignIn = () => {
     setErrors(newErrors);
 
     if (valid) {
-      // Handle successful form submission (e.g., API call)
-      console.log('Form submitted successfully:', form);
+      setIsLoading(true);
+
+      try {
+        const data = await signIn(form.email, form.password);
+
+        if (data?.session) {
+          setSession(data.session);
+          setIsLoggedIn(true)
+          router.replace('/home');
+        }
+
+      } catch (err: any) {
+        console.log(err);
+        Alert.alert("Error", err.message || "Something went wrong");
+      } finally {
+        setIsLoading(false);
+      }
     }
   }
   return (
@@ -65,16 +85,16 @@ const SignIn = () => {
 
           <View className='mt-10'>
             <FormField
-              title='Email' placeholder='example@gmail.com' value={form.email} handleChange={text => {setForm({ ...form, email: text }); setErrors({...errors, email: ''})}} icon={<Feather name="mail" size={22} color="#7b7b8b" />} otherStyles={"mb-6"} error={errors.email}
+              title='Email' placeholder='example@gmail.com' value={form.email} handleChange={text => { setForm({ ...form, email: text }); setErrors({ ...errors, email: '' }) }} icon={<Feather name="mail" size={22} color="#7b7b8b" />} otherStyles={"mb-6"} error={errors.email}
             />
 
             <FormField
-              title='Password' placeholder='Password' value={form.password} handleChange={text => {setForm({ ...form, password: text }); setErrors({...errors, password: ''})}} icon={<Feather name="lock" size={22} color="#7b7b8b" />} otherStyles={"mb-12"} error={errors.password}
+              title='Password' placeholder='Password' value={form.password} handleChange={text => { setForm({ ...form, password: text }); setErrors({ ...errors, password: '' }) }} icon={<Feather name="lock" size={22} color="#7b7b8b" />} otherStyles={"mb-12"} error={errors.password}
             />
 
-            <CustomButton title='Sign In' extraClasses={"rounded-full mb-4"} onPress={handleSubmit} />
+            <CustomButton title='Sign In' extraClasses={"rounded-full mb-4"} isLoading={isLoading} onPress={handleSubmit} />
 
-            <AppText className='text-center text-sm text-gray-600'>Don't have an account? <Text className='text-secondary-v1 font-bold' onPress={() => { router.push("/signUp")}}>Sign Up</Text></AppText>
+            <AppText className='text-center text-sm text-gray-600'>Don't have an account? <Text className='text-secondary-v1 font-bold' onPress={() => { router.push("/signUp") }}>Sign Up</Text></AppText>
           </View>
         </View>
       </ScrollView>
