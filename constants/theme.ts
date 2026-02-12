@@ -56,4 +56,5 @@ export const Fonts = Platform.select({
 export const IMAGES = {
   splash: require('../assets/images/home-illustrations.png'),
   solarIQLogo: require('../assets/images/solariq-logo.png'),
+  thunderIllustration: require('../assets/images/thunder-illustration.png')
 }
