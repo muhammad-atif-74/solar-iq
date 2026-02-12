@@ -58,7 +58,7 @@ const tabs = ['Living Room', 'Bedroom', 'Kitchen', 'All'];
 
 
 const home = () => {
-  const { session } = useGlobalContext();
+  const { session, userData } = useGlobalContext();
 
   const [activeTab, setActiveTab] = useState('All')
 
@@ -79,12 +79,12 @@ const home = () => {
           <View className='w-[12%]'>
             <View className='bg-secondary-v1 w-[43px] h-[43px] rounded-lg flex items-center justify-center'>
               <AppText className='text-white text-2xl font-bold'>
-                {session?.user?.email?.charAt(0).toUpperCase() ?? ''}
+                {userData?.username.charAt(0).toUpperCase() ?? 'G'}
               </AppText>
             </View>
           </View>
           <View className='w-[62%]'>
-            <AppText className='text-[20px] mb-1 font-bold'>Hi 👋, M. Atif</AppText>
+            <AppText className='text-[20px] mb-1 font-bold'>Hi 👋, {userData && userData?.username || "Guest"}</AppText>
             <AppText className='text-sm text-[#838A8F]'>{new Date().toLocaleDateString('en-US', { weekday: 'long' })},{" "}{new Date().getDate()} {new Date().getFullYear()}</AppText>
           </View>
           <View className='w-[20%]'>

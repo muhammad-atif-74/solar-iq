@@ -1,6 +1,7 @@
-import { supabase } from "@/lib/supbase";
+import { getUserDetails, supabase } from "@/lib/supbase";
+import { User } from "@/types";
 import { Session } from "@supabase/supabase-js";
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 type GlobalContextType = {
     isLoggedIn: boolean;
@@ -8,6 +9,8 @@ type GlobalContextType = {
     session: any;
     setSession: React.Dispatch<React.SetStateAction<any>>;
     isLoading: boolean;
+    userData: any;
+    setUserData: React.Dispatch<React.SetStateAction<any>>;
 };
 
 const GlobalContext = createContext<GlobalContextType | null>(null);
@@ -25,13 +28,18 @@ export const useGlobalContext = () => {
 const GlobalProvider = ({children} : {children: React.ReactNode}) => {
     const [isLoggedIn, setIsLoggedIn] = React.useState(false);
     const [session, setSession] = React.useState<Session | null>(null);
+    const [userData, setUserData] = useState<User | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
-          setSession(session);
-          setIsLoggedIn(!!session);
-          setIsLoading(false);
+          getUserDetails(session?.user.id!).then(userData => {
+            setSession(session);
+            setUserData(userData);
+            setIsLoggedIn(!!session);
+            setIsLoading(false);
+          })
+         
         });
       
        
@@ -48,7 +56,7 @@ const GlobalProvider = ({children} : {children: React.ReactNode}) => {
       }, []);
 
     return (
-        <GlobalContext.Provider value={{isLoggedIn, setIsLoggedIn, session, setSession, isLoading}}>
+        <GlobalContext.Provider value={{isLoggedIn, setIsLoggedIn, session, setSession, isLoading, userData, setUserData}}>
             {children}
         </GlobalContext.Provider>
     )

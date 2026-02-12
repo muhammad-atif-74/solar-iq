@@ -3,7 +3,7 @@ import CustomButton from '@/components/ui/custom-button'
 import FormField from '@/components/ui/form-field'
 import { IMAGES } from '@/constants/theme'
 import { useGlobalContext } from '@/context/GlobalProvider'
-import { signIn } from '@/lib/supbase'
+import { getUserDetails, signIn } from '@/lib/supbase'
 import Feather from '@expo/vector-icons/Feather'
 import { router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -12,7 +12,7 @@ import { Alert, Image, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SignIn = () => {
-  const { setSession, setIsLoggedIn } = useGlobalContext();
+  const { setSession, setIsLoggedIn, setUserData } = useGlobalContext();
 
   const [form, setForm] = useState({
     email: '',
@@ -53,7 +53,10 @@ const SignIn = () => {
         const data = await signIn(form.email, form.password);
 
         if (data?.session) {
+          const userDetails = await getUserDetails(data?.session.user.id)
+
           setSession(data.session);
+          setUserData(userDetails);
           setIsLoggedIn(true)
           router.replace('/home');
         }

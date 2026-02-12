@@ -55,34 +55,48 @@ export const signUp = async (username: string, email: string, password: string) 
 }
 
 export const signIn = async (email: string, password: string) => {
-    try{
-        const {data, error}  = await supabase.auth.signInWithPassword({
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         })
 
         if (error) {
             throw new Error(error.message);
-          }
+        }
 
         return data;
     }
-    catch(err: any){
+    catch (err: any) {
         console.error('Error signing up:', err.message);
         throw new Error(err.message);
     }
 }
 
 export const getSession = async () => {
-    try{
-        const {data, error} = await supabase.auth.getSession()
+    try {
+        const { data, error } = await supabase.auth.getSession()
 
-        if(error) throw error;
+        if (error) throw error;
 
         return data;
     }
-    catch(err: any){
+    catch (err: any) {
         console.error('Error signing up:', err.message);
+        throw new Error(err.message);
+    }
+}
+
+export const getUserDetails = async (userid: string) => {
+    try {
+        const { data, error } = await supabase.from("users").select("*").eq("userid", userid).single()
+
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.error('Error:', err.message);
         throw new Error(err.message);
     }
 }
