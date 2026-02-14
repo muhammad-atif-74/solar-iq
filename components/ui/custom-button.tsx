@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 
-const CustomButton = ({ onPress, title = 'Click Me', isLoading = false, extraClasses }: { onPress: any, title: string, isLoading?: boolean , extraClasses?: any}) => {
+const CustomButton = ({ onPress, title = 'Click Me', isLoading = false, extraClasses, textClasses }: { onPress: any, title: string, isLoading?: boolean , extraClasses?: any, textClasses?: any}) => {
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -14,7 +14,7 @@ const CustomButton = ({ onPress, title = 'Click Me', isLoading = false, extraCla
                     <ActivityIndicator size="small" color="#fff" />
                 ) : null
             }
-            <Text className="text-white text-center font-semibold text-base">
+            <Text className={`text-white text-center font-semibold text-base font-poppinsRegular ${textClasses}`}>
                 {title}
             </Text>
         </TouchableOpacity>

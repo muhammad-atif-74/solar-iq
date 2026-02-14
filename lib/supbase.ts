@@ -21,6 +21,7 @@ export const createUser = async (userid: string, username: string, email: string
             email,
             status: 'active',
             userid: userid,
+            is_onboarded: false
         })
 
         if (error) throw error;
@@ -44,6 +45,7 @@ export const signUp = async (username: string, email: string, password: string) 
         if (error) throw error;
 
         await createUser(data.user!.id, username, email);
+        await createNewHome(data.user!.id, username);
 
         return data;
 
@@ -73,6 +75,16 @@ export const signIn = async (email: string, password: string) => {
     }
 }
 
+export const signOut = async () => {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+    } catch (err: any) {
+        console.error('Error signing out:', err.message);
+        throw new Error(err.message);
+    }
+};
+
 export const getSession = async () => {
     try {
         const { data, error } = await supabase.auth.getSession()
@@ -100,3 +112,19 @@ export const getUserDetails = async (userid: string) => {
         throw new Error(err.message);
     }
 }
+
+export const createNewHome = async (userid: string, username: string) => {
+    try {
+        const { data, error } = await supabase.from("homes").insert({
+            home_name: `${username}'s Home`,
+            user_id: userid,
+        })
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.error('Error:', err.message);
+        throw new Error(err.message);
+    }
+} 

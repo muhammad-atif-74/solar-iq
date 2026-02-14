@@ -3,6 +3,12 @@ import { User } from "@/types";
 import { Session } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+interface OnboardingData {
+  is_solar: boolean;
+  solar_capacity_kw: number;
+
+}
+
 type GlobalContextType = {
     isLoggedIn: boolean;
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,6 +17,9 @@ type GlobalContextType = {
     isLoading: boolean;
     userData: any;
     setUserData: React.Dispatch<React.SetStateAction<any>>;
+
+    onboardingData: OnboardingData | null;
+    setOnboardingData: React.Dispatch<React.SetStateAction<any>>;
 };
 
 const GlobalContext = createContext<GlobalContextType | null>(null);
@@ -30,6 +39,8 @@ const GlobalProvider = ({children} : {children: React.ReactNode}) => {
     const [session, setSession] = React.useState<Session | null>(null);
     const [userData, setUserData] = useState<User | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
+
+    const [onboardingData, setOnboardingData] = useState(null)
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -56,7 +67,7 @@ const GlobalProvider = ({children} : {children: React.ReactNode}) => {
       }, []);
 
     return (
-        <GlobalContext.Provider value={{isLoggedIn, setIsLoggedIn, session, setSession, isLoading, userData, setUserData}}>
+        <GlobalContext.Provider value={{isLoggedIn, setIsLoggedIn, session, setSession, isLoading, userData, setUserData, onboardingData, setOnboardingData}}>
             {children}
         </GlobalContext.Provider>
     )
