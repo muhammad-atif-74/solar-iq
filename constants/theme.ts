@@ -57,5 +57,6 @@ export const IMAGES = {
   splash: require('../assets/images/home-illustrations.png'),
   solarIQLogo: require('../assets/images/solariq-logo.png'),
   thunderIllustration: require('../assets/images/thunder-illustration.png'),
-  solarPowerIllustration: require('../assets/images/solar-power-illustration.png')
+  solarPowerIllustration: require('../assets/images/solar-power-illustration.png'),
+  roomIllustration: require('../assets/images/roomIllustration.png')
 }
