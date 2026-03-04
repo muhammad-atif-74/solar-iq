@@ -64,7 +64,7 @@ const SignUp = () => {
           setSession(data.session);
           setUserData(userDetails);
           setIsLoggedIn(true)
-          router.replace('/(onboarding)/powerType');
+          router.replace('/(onboarding)/homeName');
         } else {
           Alert.alert(
             "Check your email",

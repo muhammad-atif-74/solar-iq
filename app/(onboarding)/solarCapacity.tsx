@@ -7,6 +7,7 @@ import { Image, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import FormField from '@/components/ui/form-field'
+import Stepper from '@/components/ui/stepper'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { router } from 'expo-router'
 
@@ -31,13 +32,18 @@ const SolarCapacity = () => {
     }
     return (
         <SafeAreaView className='h-screen bg-accent w-full'>
-            <View className='px-4 my-12 flex-1 justify-between'>
-                <View className='h-[400px] '>
-                    <Image
-                        source={IMAGES.solarPowerIllustration}
-                        resizeMode='contain'
-                        className='w-full h-full'
+            <View className='px-4 my-8 flex-1 justify-between'>
+                <View>
+                    <Stepper
+                        currentStep={2}
                     />
+                    <View className='h-[300px]'>
+                        <Image
+                            source={IMAGES.solarPowerIllustration}
+                            resizeMode='contain'
+                            className='w-full h-full'
+                        />
+                    </View>
                 </View>
 
                 <View className='w-full'>
@@ -66,7 +72,7 @@ const SolarCapacity = () => {
             >
                 <BottomSheetView style={{ padding: 20 }}>
                     <AppText className='text-2xl font-bold text-center mb-4'>Custom Input</AppText>
-                    <FormField title='Solar Capacity KW' value={customCapacity} handleChange={t => setCustomCapacity(t)} placeholder='eg 12' keyboardType={"numeric"} otherStyles={"mb-8"}/>
+                    <FormField title='Solar Capacity KW' value={customCapacity} handleChange={t => setCustomCapacity(t)} placeholder='eg 12' keyboardType={"numeric"} otherStyles={"mb-8"} />
                     <CustomButton title="Done" onPress={() => handleAddCapacity(customCapacity)} extraClasses={""} />
                 </BottomSheetView>
             </BottomSheet>

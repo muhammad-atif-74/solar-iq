@@ -12,3 +12,9 @@ export type Room = {
     category: string;
     isDefault?: boolean;
 }
+
+export type Selected_Room = {
+    id: string;
+    qty: number;
+    name: string;
+}

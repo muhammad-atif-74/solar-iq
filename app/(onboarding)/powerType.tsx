@@ -1,5 +1,6 @@
 import { AppText } from '@/components/ui/app-text'
 import CustomButton from '@/components/ui/custom-button'
+import Stepper from '@/components/ui/stepper'
 import { IMAGES } from '@/constants/theme'
 import { useGlobalContext } from '@/context/GlobalProvider'
 import { router } from 'expo-router'
@@ -9,23 +10,29 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 const PowerType = () => {
   const { onboardingData, setOnboardingData } = useGlobalContext()
-  
+
   const handleAddSolar = (exist: boolean) => {
     setOnboardingData({
       ...onboardingData,
       is_solar: exist
     })
-    router.push("/solarCapacity")
+    exist ? router.push("/solarCapacity") : router.push("/roomSelection")
+    
   }
   return (
     <SafeAreaView className='h-screen bg-accent w-full'>
-      <View className='px-4 my-24 flex-1 justify-between'>
-        <View className='h-[400px] mt-8'>
-          <Image
-            source={IMAGES.solarPowerIllustration}
-            resizeMode='contain'
-            className='w-full h-full'
+      <View className='px-4 my-8 flex-1 justify-between'>
+        <View>
+          <Stepper
+            currentStep={1}
           />
+          <View className='h-[300px]'>
+            <Image
+              source={IMAGES.solarPowerIllustration}
+              resizeMode='contain'
+              className='w-full h-full'
+            />
+          </View>
         </View>
 
         <View className='w-full'>

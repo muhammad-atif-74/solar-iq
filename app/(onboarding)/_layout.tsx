@@ -7,9 +7,11 @@ const OnboardingLayout = () => {
         <GestureHandlerRootView style={{ flex: 1 }}>
 
             <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name='homeName' />
                 <Stack.Screen name='powerType' />
                 <Stack.Screen name='solarCapacity' />
                 <Stack.Screen name='roomSelection' />
+                <Stack.Screen name='finalize' />
             </Stack>
 
         </GestureHandlerRootView>

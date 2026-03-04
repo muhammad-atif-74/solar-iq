@@ -1,12 +1,13 @@
 import { getUserDetails, supabase } from "@/lib/supbase";
-import { User } from "@/types";
+import { Selected_Room, User } from "@/types";
 import { Session } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface OnboardingData {
   is_solar: boolean;
   solar_capacity_kw: number;
-
+  home_name?: string;
+  selected_rooms: Selected_Room[] | null
 }
 
 type GlobalContextType = {

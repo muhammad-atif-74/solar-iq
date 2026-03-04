@@ -109,7 +109,7 @@ const home = () => {
             <AppText className='font-bold text-base text-black mb-0'>Energy Saving</AppText>
             <AppText className='font-bold text-[35px] text-green-500 my-1'>+35%</AppText>
             <AppText className='text-[#838A8F] text-sm'>23.5 kWh</AppText>
-            <TouchableOpacity onPress={() => router.push('/(onboarding)/powerType')}><AppText>Onboarding</AppText></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(onboarding)/homeName')}><AppText>Onboarding</AppText></TouchableOpacity>
           </View>
           <View className='h-[86px] p-0 flex items-center justify-center text-end'>
             <Image
