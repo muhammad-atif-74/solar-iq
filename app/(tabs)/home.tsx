@@ -1,74 +1,116 @@
 import { AppText } from '@/components/ui/app-text';
+import CustomButton from '@/components/ui/custom-button';
+import FormField from '@/components/ui/form-field';
+import { defaultRooms } from '@/constants/rooms';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
+import { createRoom, getUserHome, getUserRooms } from '@/lib/supbase';
+import { HomeData, UserRoom } from '@/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { FlatList, Image, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { Checkbox } from 'expo-checkbox';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Image, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const data = [
-  {
-    "id": 1,
-    "name": "Living Room Light",
-    "type": "Light",
-    "location": "Living Room",
-    "status": "ON",
-    "powerConsumptionWatts": 12,
-    "lastUpdated": "2026-02-12T10:15:00Z"
-  },
-  {
-    "id": 2,
-    "name": "Air Conditioner",
-    "type": "HVAC",
-    "location": "Bedroom",
-    "status": "OFF",
-    "powerConsumptionWatts": 1500,
-    "lastUpdated": "2026-02-12T09:50:00Z"
-  },
-  {
-    "id": 3,
-    "name": "Refrigerator",
-    "type": "Kitchen Appliance",
-    "location": "Kitchen",
-    "status": "ON",
-    "powerConsumptionWatts": 200,
-    "lastUpdated": "2026-02-12T08:30:00Z"
-  },
-  {
-    "id": 4,
-    "name": "Washing Machine",
-    "type": "Laundry Appliance",
-    "location": "Laundry Room",
-    "status": "OFF",
-    "powerConsumptionWatts": 500,
-    "lastUpdated": "2026-02-11T18:45:00Z"
-  },
-  {
-    "id": 5,
-    "name": "Ceiling Fan",
-    "type": "Fan",
-    "location": "Dining Room",
-    "status": "ON",
-    "powerConsumptionWatts": 75,
-    "lastUpdated": "2026-02-12T10:05:00Z"
-  }
-]
-const tabs = ['Living Room', 'Bedroom', 'Kitchen', 'All'];
-
 
 const home = () => {
   const { session, userData } = useGlobalContext();
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const [activeTab, setActiveTab] = useState('All')
 
-  if (!session) {
+  const [activeTab, setActiveTab] = useState('all')
+  const [homeData, setHomeData] = useState<HomeData | null>(null)
+  const [roomsData, setRoomsData] = useState<UserRoom[] | []>([])
+  // const [activeRooms, setActiveRooms] = useState<Room[] | []>([])
+
+  const [newRoomName, setNewRoomName] = useState("")
+  const [keepDefaultRoomName, setKeepDefaultRoomName] = useState(false)
+
+  const [loadingRooms, setLoadingRooms] = useState(false)
+
+
+  const snapPoints = ['50%'];
+
+  const openSheet = () => {
+    bottomSheetRef.current?.expand();
+  };
+  const closeSheet = () => {
+    bottomSheetRef.current?.close();
+  };
+
+  const fetchHome = async () => {
+
+    try {
+      const homeData = await getUserHome(userData?.userid);
+      setHomeData(homeData)
+    }
+    catch (err) {
+      console.log(err)
+    }
+  }
+
+  const fetchRooms = async () => {
+    setLoadingRooms(true)
+    try {
+      const roomsData = await getUserRooms(userData?.userid);
+      setRoomsData(roomsData)
+    }
+    catch (err) {
+      console.log(err)
+    }
+    finally {
+      setLoadingRooms(false)
+    }
+  }
+
+  const addRoom = async () => {
+    if(newRoomName === "" && !keepDefaultRoomName) {
+      Alert.alert("Error", "Enter room name or use check keep default name to continue.")
+      return;
+    }
+    try {
+      let roomName = ""
+      if(keepDefaultRoomName){
+        roomName = defaultRooms.find(room => room.id === activeTab)?.name!
+      }
+      else {
+        roomName = newRoomName
+      }
+      await createRoom(userData.userid, activeTab, roomName)
+      closeSheet()
+      fetchRooms()
+    }
+    catch (err) {
+      Alert.alert("Error", "Something went wrong while creating new room.")
+      console.log(err)
+    }
+  }
+
+
+
+  useEffect(() => {
+    if (!userData?.userid) return;
+
+    fetchHome()
+    fetchRooms()
+  }, [userData])
+
+  const activeRooms = useMemo(() => {
+    if (activeTab === "all") return roomsData;
+
+    return roomsData.filter(
+      (room) => room.room_id === activeTab
+    );
+  }, [activeTab, roomsData]);
+
+
+  if (loadingRooms || !session) {
     return (
       <SafeAreaView className="bg-accent h-screen justify-center items-center">
-        <AppText>Loading...</AppText>
+        <ActivityIndicator />
       </SafeAreaView>
-    );
+    )
   }
 
   return (
@@ -108,8 +150,11 @@ const home = () => {
           <View>
             <AppText className='font-bold text-base text-black mb-0'>Energy Saving</AppText>
             <AppText className='font-bold text-[35px] text-green-500 my-1'>+35%</AppText>
-            <AppText className='text-[#838A8F] text-sm'>23.5 kWh</AppText>
-            <TouchableOpacity onPress={() => router.push('/(onboarding)/homeName')}><AppText>Onboarding</AppText></TouchableOpacity>
+            {
+              homeData?.has_solar &&
+              <AppText className='text-[#838A8F] text-sm'>{homeData?.solar_capacity_kw} kWh</AppText>
+            }
+            {/* <TouchableOpacity onPress={() => router.push('/(onboarding)/homeName')}><AppText>Onboarding</AppText></TouchableOpacity> */}
           </View>
           <View className='h-[86px] p-0 flex items-center justify-center text-end'>
             <Image
@@ -124,19 +169,20 @@ const home = () => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={tabs}
-          keyExtractor={(item) => item}
+          data={defaultRooms}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingVertical: 4, gap: 6 }}
+          className='max-h-10'
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => setActiveTab(item)}
-              className='relative px-4 pb-2'
+              onPress={() => setActiveTab(item.id)}
+              className='relative px-4 pb-2 '
               activeOpacity={0.8}
             >
-              <AppText className={`font-semibold ${activeTab === item ? 'text-secondary-v1 !font-poppinsBold' : 'text-[#7D7D7D]'}`}>
-                {item}
+              <AppText className={`font-semibold ${activeTab === item.id ? 'text-secondary-v1 !font-poppinsBold' : 'text-[#7D7D7D]'}`}>
+                {item.name}
               </AppText>
-              {activeTab === item && (
+              {activeTab === item.id && (
                 <View
                   style={{ alignSelf: 'center' }}
                   className='absolute bottom-0 w-2 h-2 rounded-full bg-secondary-v1'
@@ -160,44 +206,97 @@ const home = () => {
 
         {/* Cards Grid  */}
         <View className='flex flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
-          {
-            data.map(item => {
-              return (
-                <View 
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 0.3 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 0.3,
-                  elevation: 0.5
-                }}
-                                
-                className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.id}>
-                  <View className='px-6'>
-                    <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
-                      <AntDesign name="bulb" size={24} color="black" />
-                    </View>
-                    <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.name}</AppText>
-                    <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.powerConsumptionWatts} watts</AppText>
-                  </View>
 
-                  <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>
-                    <AppText className='text-[17px] font-medium text-[#7D7D7D]'>{item.status}</AppText>
-                    <Switch
-                      trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
-                      thumbColor={item.status === "ON" ? '#F9F9F9' : '#fff'}
-                      ios_backgroundColor="#fff"
-                      onValueChange={() => { }}
-                      value={item.status === "ON"}
-                    />
-                  </View>
-                </View>
-              )
-            })
+          {/* add new room card  */}
+          {
+            activeTab !== "all" && 
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 0.3 },
+              shadowOpacity: 0.05,
+              shadowRadius: 0.3,
+              elevation: 0.5,
+            }}
+            onPress={openSheet}
+            className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] flex items-center justify-center border border-dashed border-[#bbbbbb]'>
+            <View className='px-6 flex items-center justify-center'>
+              <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 flex items-center justify-center'>
+                <AntDesign name="plus" size={35} color="black" />
+              </View>
+              <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>Add Room</AppText>
+            </View>
+
+          </TouchableOpacity>
           }
+
+          {
+            activeRooms.length > 0 ?
+              activeRooms.map(item => {
+                return (
+                  <View
+                    style={{
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 0.3 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 0.3,
+                      elevation: 0.5
+                    }}
+
+                    className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.id}>
+                    <View className='px-6'>
+                      <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
+                        <AntDesign name="bulb" size={24} color="black" />
+                      </View>
+                      <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.room_name}</AppText>
+                      <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.powerConsumptionWatts | 0} appliances</AppText>
+                    </View>
+
+                    <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>
+                      <AppText className='text-[17px] font-medium text-[#7D7D7D]'>{item.status}</AppText>
+                      <Switch
+                        trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
+                        thumbColor={item.status === "ON" ? '#F9F9F9' : '#fff'}
+                        ios_backgroundColor="#fff"
+                        onValueChange={() => { }}
+                        value={item.status === "ON"}
+                      />
+                    </View>
+                  </View>
+                )
+              }) : (
+                // <AppText>No rooms found</AppText>
+                <></>
+              )
+          }
+
         </View>
 
       </ScrollView>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+      >
+        <BottomSheetView style={{ padding: 20 }}>
+          <AppText className='text-2xl font-bold text-center mb-4'>Add New Room</AppText>
+          <FormField title='Enter Room Name' value={newRoomName} handleChange={t => setNewRoomName(t)} placeholder='eg Dining Room' otherStyles={"mb-6"} editable={!keepDefaultRoomName}/>
+
+          <View className='flex flex-row items-center gap-4 mb-6'>
+            <Checkbox
+              value={keepDefaultRoomName}
+              onValueChange={setKeepDefaultRoomName}
+              color={keepDefaultRoomName ? '#1c1c1c' : undefined}
+            />
+            <AppText className='mb-0' onPress={() => setKeepDefaultRoomName(!keepDefaultRoomName)}>Keep Default Name</AppText>
+          </View>
+
+          <CustomButton title="Add" onPress={() => addRoom()} extraClasses={""} isDisable={!keepDefaultRoomName && newRoomName === ""}/>
+        </BottomSheetView>
+      </BottomSheet>
     </SafeAreaView>
   )
 }

@@ -167,28 +167,54 @@ export const createRoom = async (user_id: string, room_id: string, room_name: st
 export const createUserRooms = async (
     userId: string,
     selectedRooms: Selected_Room[]
-  ) => {
+) => {
     try {
-      if (!selectedRooms?.length) return;
-  
-      const roomsToInsert = selectedRooms.flatMap(room =>
-        Array.from({ length: room.qty }, () => ({
-          user_id: userId,
-          room_id: room.id,
-          room_name: room.name,
-        }))
-      );
-  
-      const { data, error } = await supabase
-        .from("rooms")
-        .insert(roomsToInsert);
-  
-      if (error) throw error;
-  
-      return data;
+        if (!selectedRooms?.length) return;
+
+        const roomsToInsert = selectedRooms.flatMap(room =>
+            Array.from({ length: room.qty }, () => ({
+                user_id: userId,
+                room_id: room.id,
+                room_name: room.name,
+            }))
+        );
+
+        const { data, error } = await supabase
+            .from("rooms")
+            .insert(roomsToInsert);
+
+        if (error) throw error;
+
+        return data;
     } catch (err: any) {
-      console.error("Create rooms error:", err.message);
-      throw err;
+        console.error("Create rooms error:", err.message);
+        throw err;
     }
-  };
-  
+};
+
+
+export const getUserHome = async (userid: string) => {
+    try {
+        const { data, error } = await supabase.from("homes").select("*").eq("user_id", userid).single();
+
+        if (error) throw error;
+        return data
+    }
+    catch (err: any) {
+        console.log("Error fetching user home ", err)
+        throw err
+    }
+}
+
+export const getUserRooms = async (userid: string) => {
+    try {
+        const { data, error } = await supabase.from("rooms").select("*").eq("user_id", userid);
+
+        if (error) throw error;
+        return data
+    }
+    catch (err: any) {
+        console.log("Error fetching user home ", err)
+        throw err
+    }
+}

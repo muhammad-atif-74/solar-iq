@@ -11,9 +11,10 @@ interface FormFieldProps {
     placeholder?: string;
     icon?: any;
     error?: string;
+    editable?: boolean;
 }
 
-const FormField = ({ title, handleChange, value, otherStyles, keyboardType, placeholder, icon, error = "" }: FormFieldProps) => {
+const FormField = ({ title, handleChange, value, otherStyles, keyboardType, placeholder, icon, error = "", editable= true }: FormFieldProps) => {
     const [showPassword, setShowPassword] = useState(false)
     return (
         <View className={`space-y-2 ${otherStyles}`}>
@@ -32,6 +33,7 @@ const FormField = ({ title, handleChange, value, otherStyles, keyboardType, plac
                     onChangeText={handleChange}
                     secureTextEntry={title === "Password" && !showPassword}
                     keyboardType={keyboardType}
+                    editable={editable}
                 />
                 {
                     title === "Password" &&
