@@ -1,4 +1,4 @@
-import { Selected_Room } from '@/types';
+import { DEVICE_DB, Selected_Room } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
@@ -215,6 +215,34 @@ export const getUserRooms = async (userid: string) => {
     }
     catch (err: any) {
         console.log("Error fetching user home ", err)
+        throw err
+    }
+}
+
+export const addNewDevice = async (room_id: number, user_id: string, appliance_id: string | null, is_on: boolean, is_custom: boolean, custom_name: string | null, wattage_override: number | null) => {
+    try {
+        const { data, error } = await supabase.from("devices").insert({
+            room_id, user_id, appliance_id, is_on, is_custom, custom_name, wattage_override
+        })
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.log("Error adding the device. ", err)
+        throw err
+    }
+}
+
+export const addNewDevices = async (devices: DEVICE_DB[]) => {
+    try {
+        const { data, error } = await supabase.from("devices").insert(devices)
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.log("Error adding the device. ", err)
         throw err
     }
 }

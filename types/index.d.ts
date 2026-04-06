@@ -49,3 +49,13 @@ export type Device_Template = {
     is_custom: boolean
 
 }
+
+type DEVICE_DB = {
+    room_id: number;
+    user_id: string;
+    appliance_id: string | null;
+    is_on: boolean,
+    is_custom: boolean;
+    custom_name?: string | null;
+    wattage_override?: number | null
+}

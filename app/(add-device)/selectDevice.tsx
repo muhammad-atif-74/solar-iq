@@ -1,11 +1,13 @@
 import { AppText } from '@/components/ui/app-text'
 import CustomButton from '@/components/ui/custom-button'
 import { DEVICE_CATALOG, DEVICE_CATEGORIES } from '@/constants/devices'
-import { Device_Category, Device_Template } from '@/types'
+import { useGlobalContext } from '@/context/GlobalProvider'
+import { addNewDevices } from '@/lib/supbase'
+import { Device_Category, DEVICE_DB, Device_Template } from '@/types'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import { TouchableOpacity, View } from 'react-native'
+import { Alert, TouchableOpacity, View } from 'react-native'
 import { FlatList } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -21,18 +23,42 @@ const DisplayIcon = ({ name }: { name: string }) => {
 };
 
 const selectDevice = () => {
-    const {room_id} = useLocalSearchParams();
+    const { session, userData } = useGlobalContext();
+    const router = useRouter()
+    const { room_id } = useLocalSearchParams();
 
     const [activeTab, setActiveTab] = useState("all")
     const [devices, setDevices] = useState<Device_Template[] | []>([])
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([])
+    const [addingDevices, setAddingDevices] = useState(false)
 
 
-    const handleContinue = () => {
-        console.log("ROOMID: ", room_id)
-        console.log("DEVICES: ",selectedDeviceIds)
+    // DB STRUCTURE FOR DEVICES: 
+    // user_id, room_id, appliance_id, is_on is_custom, custom_name, wattage_override. 
 
-        
+    const handleContinue = async () => {
+        if (!session || !userData) return
+        const devices: DEVICE_DB[] = selectedDeviceIds.map(device_id => ({
+            appliance_id: device_id,
+            user_id: userData?.userid,
+            room_id: Number(room_id),
+            is_on: false,
+            is_custom: false
+        }))
+
+        try {
+            setAddingDevices(true)
+            await addNewDevices(devices)
+            router.replace(`/home?room_id=${room_id}`)
+        }
+        catch (err) {
+            console.log(err)
+            Alert.alert("Error", "Something went wrong while adding new devices.")
+
+        }
+        finally {
+            setAddingDevices(false)
+        }
     }
 
     useEffect(() => {
@@ -47,20 +73,20 @@ const selectDevice = () => {
 
     const handleSelectDevice = (id: string) => {
         setSelectedDeviceIds(prev => {
-          if (prev.includes(id)) {
-            // remove item
-            return prev.filter(item => item !== id);
-          } else {
-            // add item
-            return [...prev, id];
-          }
+            if (prev.includes(id)) {
+                // remove item
+                return prev.filter(item => item !== id);
+            } else {
+                // add item
+                return [...prev, id];
+            }
         });
-      };
-      
+    };
+
 
     return (
         <SafeAreaView className='flex-1'>
-        <View className='flex-1 px-4 justify-between'>
+            <View className='flex-1 px-4 justify-between'>
                 <View style={{ paddingTop: 20, paddingBottom: 8 }}>
                     <AppText className='text-2xl font-bold text-center mb-4'>Select Devices</AppText>
 
@@ -124,7 +150,8 @@ const selectDevice = () => {
                     title={`Add (${selectedDeviceIds.length}) devices`}
                     onPress={handleContinue}
                     extraClasses=''
-                    isDisable={false}
+                    isDisable={addingDevices}
+                    isLoading={addingDevices}
                 />
             </View>
         </SafeAreaView>

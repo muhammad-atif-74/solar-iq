@@ -8,18 +8,19 @@ import { HomeData, UserRoom } from '@/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const home = () => {
   const { session, userData } = useGlobalContext();
+  const { room_id } = useLocalSearchParams()
   const addRoomBottomSheetRef = useRef<BottomSheet>(null);
   const router = useRouter();
 
 
-  const [activeTab, setActiveTab] = useState<number | "all">("all")
+  const [activeTab, setActiveTab] = useState<number | "all">(Number(room_id) || "all")
   const [homeData, setHomeData] = useState<HomeData | null>(null)
   const [roomsData, setRoomsData] = useState<UserRoom[] | []>([])
   // const [activeRooms, setActiveRooms] = useState<Room[] | []>([])
