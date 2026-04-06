@@ -33,3 +33,19 @@ export type HomeData = {
     solar_capacity_kw: number;
     has_solar: boolean;
 }
+
+export type Device_Category = {
+    id: string;
+    name: string
+}
+
+export type Device_Template = {
+    id: string;
+    name: string;
+    category_id: string;
+    category_name: string;
+    default_wattage_w: number;
+    icon: string;
+    is_custom: boolean
+
+}

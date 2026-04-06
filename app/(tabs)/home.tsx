@@ -1,6 +1,5 @@
+import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet';
 import { AppText } from '@/components/ui/app-text';
-import CustomButton from '@/components/ui/custom-button';
-import FormField from '@/components/ui/form-field';
 import { defaultRooms } from '@/constants/rooms';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
@@ -8,16 +7,16 @@ import { createRoom, getUserHome, getUserRooms } from '@/lib/supbase';
 import { HomeData, UserRoom } from '@/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Picker } from '@react-native-picker/picker';
-import { Checkbox } from 'expo-checkbox';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const home = () => {
   const { session, userData } = useGlobalContext();
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const addRoomBottomSheetRef = useRef<BottomSheet>(null);
+  const router = useRouter();
 
 
   const [activeTab, setActiveTab] = useState<number | "all">("all")
@@ -33,12 +32,11 @@ const home = () => {
 
 
   const snapPoints = ['55%'];
-
-  const openSheet = () => {
-    bottomSheetRef.current?.expand();
+  const openAddRoomSheet = () => {
+    addRoomBottomSheetRef.current?.expand();
   };
-  const closeSheet = () => {
-    bottomSheetRef.current?.close();
+  const closeAddRoomSheet = () => {
+    addRoomBottomSheetRef.current?.close();
   };
 
   const fetchHome = async () => {
@@ -87,7 +85,7 @@ const home = () => {
       setNewRoomName("")
       setSelectedRoomCategory("")
       setKeepDefaultRoomName(false)
-      closeSheet()
+      closeAddRoomSheet()
       fetchRooms()
     }
     catch (err) {
@@ -109,7 +107,7 @@ const home = () => {
     if (activeTab === "all") return roomsData;
 
     return roomsData.filter(
-      (room) => room.room_id === activeTab
+      (room) => room.room_id === String(activeTab)
     );
   }, [activeTab, roomsData]);
 
@@ -190,7 +188,7 @@ const home = () => {
             if (String(item.id) === "add_new") {
               return (
                 <TouchableOpacity
-                  onPress={openSheet}
+                  onPress={openAddRoomSheet}
                   className='relative px-4 pb-2'
                   activeOpacity={0.8}
                 >
@@ -233,11 +231,11 @@ const home = () => {
         {/* Cards Grid  */}
         <View className='flex flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
 
-          {/* add new room card  */}
+          {/* add new device card  */}
           {
             activeTab !== "all" &&
-            <TouchableOpacity
-              activeOpacity={0.9}
+            <Pressable
+              onPress={() => router.push(`/(add-device)/selectDevice?room_id=${activeTab}`)}
               style={{
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 0.3 },
@@ -245,16 +243,14 @@ const home = () => {
                 shadowRadius: 0.3,
                 elevation: 0.5,
               }}
-              onPress={openSheet}
-              className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] flex items-center justify-center border border-dashed border-[#bbbbbb]'>
-              <View className='px-6 flex items-center justify-center'>
-                <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 flex items-center justify-center'>
-                  <AntDesign name="plus" size={35} color="black" />
+              className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
+              <View className='items-center justify-center'>
+                <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 items-center justify-center'>
+                  <AntDesign name="plus" size={32} color="black" />
                 </View>
-                <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>Add Room</AppText>
+                <AppText className='text-[16px] font-semibold text-secondary-v1 mb-1'>Add New Device</AppText>
               </View>
-
-            </TouchableOpacity>
+            </Pressable>
           }
 
           {
@@ -298,53 +294,22 @@ const home = () => {
           }
 
         </View>
-
       </ScrollView>
 
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={-1}
+      {/* Add new room modal  */}
+      <AddRoomBottomSheet
+        ref={addRoomBottomSheetRef}
+        addRoom={addRoom}
+        defaultRooms={defaultRooms}
+        keepDefaultRoomName={keepDefaultRoomName}
+        setKeepDefaultRoomName={setKeepDefaultRoomName}
+        newRoomName={newRoomName}
+        setNewRoomName={setNewRoomName}
+        selectedRoomCategory={selectedRoomCategory}
+        setSelectedRoomCategory={setSelectedRoomCategory}
         snapPoints={snapPoints}
-        enablePanDownToClose
-      >
-        <BottomSheetView style={{ padding: 20 }}>
-          <AppText className='text-2xl font-bold text-center mb-4'>Add New Room</AppText>
+      />
 
-
-          <View className='mb-4'>
-            <Text className='text-base text-secondary-v1 font-medium mb-1.5'>Select Room Category</Text>
-            <View className='w-full h-16 bg-white rounded-full border border-[#ccc] overflow-hidden justify-center px-4'>
-              <Picker
-                selectedValue={selectedRoomCategory}
-                onValueChange={(itemValue) => setSelectedRoomCategory(itemValue)}
-                style={{ height: '100%', width: '100%' }} // Ensure picker fills the box
-                dropdownIconColor="#1c1c1c" // Android specific icon color
-              >
-                {defaultRooms
-                  .filter(room => room.id !== "all")
-                  .map(room => (
-                    <Picker.Item key={room.id} label={room.name} value={room.id} />
-                  ))}
-              </Picker>
-            </View>
-          </View>
-
-
-          <FormField title='Enter Room Name' value={newRoomName} handleChange={t => setNewRoomName(t)} placeholder='eg Dining Room' otherStyles={"mb-3"} editable={!keepDefaultRoomName} />
-
-          <View className='flex flex-row items-center gap-4 mb-3'>
-            <Checkbox
-              value={keepDefaultRoomName}
-              onValueChange={setKeepDefaultRoomName}
-              color={keepDefaultRoomName ? '#1c1c1c' : undefined}
-            />
-            <AppText className='mb-0' onPress={() => setKeepDefaultRoomName(!keepDefaultRoomName)}>Keep Default Name</AppText>
-          </View>
-
-
-          <CustomButton title="Add" onPress={() => addRoom()} extraClasses={""} isDisable={!selectedRoomCategory || (!keepDefaultRoomName && newRoomName === "")} />
-        </BottomSheetView>
-      </BottomSheet>
     </SafeAreaView>
   )
 }
