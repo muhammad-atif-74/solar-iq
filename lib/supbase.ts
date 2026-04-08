@@ -249,24 +249,37 @@ export const addNewDevices = async (devices: Omit<DEVICE_DB, "id">[]) => {
 
 export const getDevices = async (room_id: number | null): Promise<DEVICE_DB[] | null> => {
     try {
-        let data, error;
-
-        if (!room_id) {
-            ({ data, error } = await supabase
-                .from("devices")
-                .select("*"));
-        } else {
-            ({ data, error } = await supabase
-                .from("devices")
-                .select("*")
-                .eq("room_id", room_id));
-        }
-
-        if (error) throw error;
-        return data;
-
+      let query = supabase
+        .from("devices")
+        .select("*")
+        .order("created_at", { ascending: true });
+  
+      if (room_id) {
+        query = query.eq("room_id", room_id);
+      }
+  
+      const { data, error } = await query;
+  
+      if (error) throw error;
+      return data;
     } catch (err: any) {
-        console.log("Error fetching devices ", err);
-        throw err;
+      console.log("Error fetching devices ", err);
+      throw err;
     }
-};
+  };
+  
+
+export const toggleDeviceStatus = async (id: number, status: boolean) => {
+    try {
+
+        const { data, error } = await supabase.from('devices').update({ is_on: status }).eq('id', id).select().single();
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.error('Error updating user:', err.message);
+        throw new Error(err.message);
+    }
+
+}

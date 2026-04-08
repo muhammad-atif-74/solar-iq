@@ -4,7 +4,7 @@ import { DEVICE_CATALOG } from '@/constants/devices';
 import { defaultRooms } from '@/constants/rooms';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { createRoom, getDevices, getUserHome, getUserRooms } from '@/lib/supbase';
+import { createRoom, getDevices, getUserHome, getUserRooms, toggleDeviceStatus } from '@/lib/supbase';
 import { DEVICE, DEVICE_DB, HomeData, UserRoom } from '@/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -112,6 +112,7 @@ const home = () => {
       if (!devices) return setDevices([])
 
       const deviceList: DEVICE[] = getCompleteDevices(devices)
+      console.log("DEVICES : _ ", deviceList)
       setDevices(deviceList);
 
     }
@@ -122,6 +123,35 @@ const home = () => {
       setLoadingDevices(false)
     }
   }
+
+  const toggleDeviceStatusOnOff = async (id: number, status: boolean) => {
+    try {
+      setDevices(prev =>
+        prev.map(device =>
+          device.device_id === id
+            ? { ...device, is_on: status }
+            : device
+        )
+      );
+
+      await toggleDeviceStatus(id, status);
+
+    } catch (err) {
+      console.log(err);
+
+      // revert if failed
+      setDevices(prev =>
+        prev.map(device =>
+          device.device_id === id
+            ? { ...device, is_on: !status }
+            : device
+        )
+      );
+
+      Alert.alert("Error", "Something went wrong while toggling.");
+    }
+  };
+
 
   const addRoom = async () => {
     if ((newRoomName === "" && !keepDefaultRoomName)) {
@@ -344,7 +374,7 @@ const home = () => {
                               trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
                               thumbColor={item.is_on ? '#F9F9F9' : '#fff'}
                               ios_backgroundColor="#fff"
-                              onValueChange={() => { }}
+                              onValueChange={() => { toggleDeviceStatusOnOff(item.device_id, item.is_on ? false : true) }}
                               value={item.is_on}
                             />
                           </View>
