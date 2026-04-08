@@ -6,13 +6,73 @@ import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { createRoom, getDevices, getUserHome, getUserRooms, toggleDeviceStatus } from '@/lib/supbase';
 import { DEVICE, DEVICE_DB, HomeData, UserRoom } from '@/types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const getCompleteDevices = (devices: DEVICE_DB[]) => {
+  // Step 1: Build lookup map
+  const catalogMap = new Map(
+    DEVICE_CATALOG.map((item) => [item.id, item])
+  );
+
+  // Step 2: Transform devices
+  const deviceList: DEVICE[] = devices
+    .map((dbDevice: any) => {
+      const template = catalogMap.get(dbDevice.appliance_id);
+
+      if (!template) return null;
+
+      return {
+        id: template.id,
+        name: dbDevice.is_custom ? dbDevice.custom_name : template.name,
+        category_id: template.category_id,
+        category_name: template.category_name,
+        default_wattage_w:
+          dbDevice.wattage_override ?? template.default_wattage_w,
+        icon: template.icon,
+
+        device_id: dbDevice.id,
+        room_id: dbDevice.room_id,
+        user_id: dbDevice.user_id,
+        appliance_id: dbDevice.appliance_id,
+        is_on: dbDevice.is_on,
+
+        is_custom: dbDevice.is_custom,
+      };
+    })
+    .filter(Boolean) as DEVICE[];
+
+  return deviceList
+
+}
+
+const getWattageInUse = (devices: DEVICE[]) => {
+  const on_devices = devices.filter(device => device.is_on)
+
+  let wattageInUse = 0;
+  on_devices.forEach(device => {
+    wattageInUse += Number(device.default_wattage_w)
+  })
+
+  return wattageInUse
+}
+
+const DisplayIcon = ({ name }: { name: string }) => {
+  return (
+    <MaterialCommunityIcons
+      name={name as any}
+      size={24}
+      color="#333"
+    />
+  );
+};
 
 const home = () => {
   const { session, userData } = useGlobalContext();
@@ -68,42 +128,6 @@ const home = () => {
     }
   }
 
-  const getCompleteDevices = (devices: DEVICE_DB[]) => {
-    // Step 1: Build lookup map
-    const catalogMap = new Map(
-      DEVICE_CATALOG.map((item) => [item.id, item])
-    );
-
-    // Step 2: Transform devices
-    const deviceList: DEVICE[] = devices
-      .map((dbDevice: any) => {
-        const template = catalogMap.get(dbDevice.appliance_id);
-
-        if (!template) return null;
-
-        return {
-          id: template.id,
-          name: dbDevice.is_custom ? dbDevice.custom_name : template.name,
-          category_id: template.category_id,
-          category_name: template.category_name,
-          default_wattage_w:
-            dbDevice.wattage_override ?? template.default_wattage_w,
-          icon: template.icon,
-
-          device_id: dbDevice.id,
-          room_id: dbDevice.room_id,
-          user_id: dbDevice.user_id,
-          appliance_id: dbDevice.appliance_id,
-          is_on: dbDevice.is_on,
-
-          is_custom: dbDevice.is_custom,
-        };
-      })
-      .filter(Boolean) as DEVICE[];
-
-    return deviceList
-
-  }
 
   const fetchDevices = async () => {
     setLoadingDevices(true)
@@ -112,7 +136,7 @@ const home = () => {
       if (!devices) return setDevices([])
 
       const deviceList: DEVICE[] = getCompleteDevices(devices)
-      console.log("DEVICES : _ ", deviceList)
+      // console.log("DEVICES : _ ", deviceList)
       setDevices(deviceList);
 
     }
@@ -238,32 +262,96 @@ const home = () => {
         </View>
 
         {/* Dashboard card  */}
-        <View
-          style={{
-            shadowColor: '#333',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.4,
-            shadowRadius: 2,
-            elevation: 4
-          }}
-          className='relative p-6 w-full min-h-[108px] rounded-[20px] bg-[#F5F5F5] flex flex-row justify-between items-center mb-6'>
-          <View>
-            <AppText className='font-bold text-base text-black mb-0'>Energy Saving</AppText>
-            <AppText className='font-bold text-[35px] text-green-500 my-1'>+35%</AppText>
-            {
-              homeData?.has_solar &&
-              <AppText className='text-[#838A8F] text-sm'>{homeData?.solar_capacity_kw} kWh</AppText>
-            }
-            {/* <TouchableOpacity onPress={() => router.push('/(onboarding)/homeName')}><AppText>Onboarding</AppText></TouchableOpacity> */}
-          </View>
-          <View className='h-[86px] p-0 flex items-center justify-center text-end'>
-            <Image
-              source={IMAGES.thunderIllustration}
-              resizeMode='cover'
-              className='w-[107px] h-[86px] ms-auto'
-            />
-          </View>
-        </View>
+        {
+          loadingDevices ? (
+            <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
+              className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-6'></View>
+          ) : (devices.length > 0 ?
+            (
+              <>
+                <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
+                  className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-2'>
+
+                  {/* Top row */}
+                  <View className='flex-row justify-between items-start mb-4'>
+                    <View>
+                      <AppText className='text-[#838A8F] text-sm mb-1'>Currently in use</AppText>
+                      <AppText className='font-bold text-[32px] text-black leading-none'>
+                        {getWattageInUse(devices)}
+                        <AppText className='font-normal text-base text-[#838A8F]'> W</AppText>
+                      </AppText>
+                    </View>
+                    {homeData?.has_solar && (
+                      <View className='items-end'>
+                        <AppText className='text-[#838A8F] text-sm mb-1'>Solar capacity</AppText>
+                        <AppText className='font-bold text-[32px] text-black leading-none'>
+                          {homeData.solar_capacity_kw}000
+                          <AppText className='font-normal text-base text-[#838A8F]'> W</AppText>
+                        </AppText>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Progress bar */}
+                  {homeData?.has_solar && (() => {
+                    const totalW = homeData.solar_capacity_kw * 1000;
+                    const usedW = getWattageInUse(devices);
+                    const pct = Math.min((usedW / totalW) * 100, 100);
+                    const remaining = totalW - usedW;
+                    const isOver = usedW > totalW;
+                    return (
+                      <>
+                        <View className='w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2'>
+                          <View
+                            style={{ width: `${pct}%`, backgroundColor: isOver ? '#ef4444' : '#22c55e' }}
+                            className='h-full rounded-full'
+                          />
+                        </View>
+                        <View className='flex-row justify-between'>
+                          <AppText className='text-xs text-[#838A8F]'>{Math.round(pct)}% used</AppText>
+                          <AppText className={`text-xs font-bold ${isOver ? 'text-red-500' : 'text-green-500'}`}>
+                            {isOver ? `${Math.abs(remaining)}W over limit` : `${remaining}W remaining`}
+                          </AppText>
+                        </View>
+                      </>
+                    );
+                  })()}
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
+                  className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-2 items-center justify-center min-h-[108px]'>
+                  <Image source={IMAGES.thunderIllustration} resizeMode='contain' className='w-16 h-12 mb-3 opacity-30' />
+                  <AppText className='font-bold text-black text-sm mb-1'>No appliances added yet</AppText>
+                  <AppText className='text-[#838A8F] text-xs text-center mb-3'>Add your first device to start tracking energy usage</AppText>
+                  <TouchableOpacity onPress={() => router.push('/')}
+                    className='bg-green-500 px-5 py-2 rounded-full'>
+                    <AppText className='text-white text-xs font-bold'>+ Add Appliance</AppText>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )
+          )
+        }
+        {(homeData?.has_solar && devices.length > 0) && (() => {
+          const totalW = homeData.solar_capacity_kw * 1000;
+          const usedW = getWattageInUse(devices);
+          const remaining = totalW - usedW;
+          const isOver = usedW > totalW;
+
+          return (
+            <View className={`flex-row items-center gap-2 px-4 py-2 rounded-full mb-6 self-start ${isOver ? 'bg-red-100' : 'bg-green-100'}`}>
+              <View className={`w-2 h-2 rounded-full ${isOver ? 'bg-red-500' : 'bg-green-500'}`} />
+              <AppText className={`text-xs font-bold ${isOver ? 'text-red-600' : 'text-green-600'}`}>
+                {isOver
+                  ? `Reduce ${Math.abs(remaining)}W to stay within limit`
+                  : `You can add up to ~${remaining}W more`}
+              </AppText>
+            </View>
+          );
+        })()}
+
 
         {/* Tabs  */}
         <FlatList
@@ -336,7 +424,7 @@ const home = () => {
                       shadowRadius: 0.3,
                       elevation: 0.5,
                     }}
-                    className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
+                    className='relative h-[180px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
                     <View className='items-center justify-center'>
                       <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 items-center justify-center'>
                         <AntDesign name="plus" size={32} color="black" />
@@ -359,10 +447,12 @@ const home = () => {
                             elevation: 0.5
                           }}
 
-                          className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.device_id}>
+                          className='relative h-[180px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.device_id}>
                           <View className='px-6'>
                             <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
-                              <AntDesign name="bulb" size={24} color="black" />
+                              {
+                                DisplayIcon({ name: item.icon })
+                              }
                             </View>
                             <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.name}</AppText>
                             <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.default_wattage_w | 0} watts</AppText>
