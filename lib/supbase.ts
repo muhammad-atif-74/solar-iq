@@ -234,7 +234,7 @@ export const addNewDevice = async (room_id: number, user_id: string, appliance_i
     }
 }
 
-export const addNewDevices = async (devices: DEVICE_DB[]) => {
+export const addNewDevices = async (devices: Omit<DEVICE_DB, "id">[]) => {
     try {
         const { data, error } = await supabase.from("devices").insert(devices)
         if (error) throw error;
@@ -246,3 +246,27 @@ export const addNewDevices = async (devices: DEVICE_DB[]) => {
         throw err
     }
 }
+
+export const getDevices = async (room_id: number | null): Promise<DEVICE_DB[] | null> => {
+    try {
+        let data, error;
+
+        if (!room_id) {
+            ({ data, error } = await supabase
+                .from("devices")
+                .select("*"));
+        } else {
+            ({ data, error } = await supabase
+                .from("devices")
+                .select("*")
+                .eq("room_id", room_id));
+        }
+
+        if (error) throw error;
+        return data;
+
+    } catch (err: any) {
+        console.log("Error fetching devices ", err);
+        throw err;
+    }
+};

@@ -38,12 +38,13 @@ const selectDevice = () => {
 
     const handleContinue = async () => {
         if (!session || !userData) return
-        const devices: DEVICE_DB[] = selectedDeviceIds.map(device_id => ({
+        const devices: Omit<DEVICE_DB, "id">[] = selectedDeviceIds.map(device_id => ({
             appliance_id: device_id,
             user_id: userData?.userid,
             room_id: Number(room_id),
             is_on: false,
-            is_custom: false
+            is_custom: false,
+            category_id: null
         }))
 
         try {

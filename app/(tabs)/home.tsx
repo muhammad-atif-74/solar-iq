@@ -1,16 +1,17 @@
 import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet';
 import { AppText } from '@/components/ui/app-text';
+import { DEVICE_CATALOG } from '@/constants/devices';
 import { defaultRooms } from '@/constants/rooms';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { createRoom, getUserHome, getUserRooms } from '@/lib/supbase';
-import { HomeData, UserRoom } from '@/types';
+import { createRoom, getDevices, getUserHome, getUserRooms } from '@/lib/supbase';
+import { DEVICE, DEVICE_DB, HomeData, UserRoom } from '@/types';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const home = () => {
@@ -23,13 +24,15 @@ const home = () => {
   const [activeTab, setActiveTab] = useState<number | "all">(Number(room_id) || "all")
   const [homeData, setHomeData] = useState<HomeData | null>(null)
   const [roomsData, setRoomsData] = useState<UserRoom[] | []>([])
-  // const [activeRooms, setActiveRooms] = useState<Room[] | []>([])
+
+  const [devices, setDevices] = useState<DEVICE[] | []>([])
 
   const [newRoomName, setNewRoomName] = useState("")
   const [keepDefaultRoomName, setKeepDefaultRoomName] = useState(false)
   const [selectedRoomCategory, setSelectedRoomCategory] = useState(defaultRooms[0].id);
 
   const [loadingRooms, setLoadingRooms] = useState(false)
+  const [loadingDevices, setLoadingDevices] = useState(false)
 
 
   const snapPoints = ['55%'];
@@ -62,6 +65,61 @@ const home = () => {
     }
     finally {
       setLoadingRooms(false)
+    }
+  }
+
+  const getCompleteDevices = (devices: DEVICE_DB[]) => {
+    // Step 1: Build lookup map
+    const catalogMap = new Map(
+      DEVICE_CATALOG.map((item) => [item.id, item])
+    );
+
+    // Step 2: Transform devices
+    const deviceList: DEVICE[] = devices
+      .map((dbDevice: any) => {
+        const template = catalogMap.get(dbDevice.appliance_id);
+
+        if (!template) return null;
+
+        return {
+          id: template.id,
+          name: dbDevice.is_custom ? dbDevice.custom_name : template.name,
+          category_id: template.category_id,
+          category_name: template.category_name,
+          default_wattage_w:
+            dbDevice.wattage_override ?? template.default_wattage_w,
+          icon: template.icon,
+
+          device_id: dbDevice.id,
+          room_id: dbDevice.room_id,
+          user_id: dbDevice.user_id,
+          appliance_id: dbDevice.appliance_id,
+          is_on: dbDevice.is_on,
+
+          is_custom: dbDevice.is_custom,
+        };
+      })
+      .filter(Boolean) as DEVICE[];
+
+    return deviceList
+
+  }
+
+  const fetchDevices = async () => {
+    setLoadingDevices(true)
+    try {
+      const devices: DEVICE_DB[] | null = await getDevices(activeTab === "all" ? null : Number(activeTab));
+      if (!devices) return setDevices([])
+
+      const deviceList: DEVICE[] = getCompleteDevices(devices)
+      setDevices(deviceList);
+
+    }
+    catch (err) {
+      console.log(err)
+    }
+    finally {
+      setLoadingDevices(false)
     }
   }
 
@@ -112,14 +170,18 @@ const home = () => {
     );
   }, [activeTab, roomsData]);
 
+  useEffect(() => {
+    fetchDevices()
+  }, [activeTab])
 
-  if (loadingRooms || !session) {
-    return (
-      <SafeAreaView className="bg-accent h-screen justify-center items-center">
-        <ActivityIndicator />
-      </SafeAreaView>
-    )
-  }
+
+  // if (loadingRooms || !session) {
+  //   return (
+  //     <SafeAreaView className="bg-accent h-screen justify-center items-center">
+  //       <ActivityIndicator />
+  //     </SafeAreaView>
+  //   )
+  // }
 
   return (
     <SafeAreaView className='bg-accent h-screen'>
@@ -218,83 +280,88 @@ const home = () => {
         />
 
         {/* Skeleton Loading cards  */}
-        <View className='hidden flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
-          {
-            [1, 2, 3, 4].map((item, i) => {
-              return (
-                <View className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] animate-pulse' key={i}>
-                </View>
-              )
-            })
-          }
-        </View>
-
-        {/* Cards Grid  */}
-        <View className='flex flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
-
-          {/* add new device card  */}
-          {
-            activeTab !== "all" &&
-            <Pressable
-              onPress={() => router.push(`/(add-device)/selectDevice?room_id=${activeTab}`)}
-              style={{
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0.3 },
-                shadowOpacity: 0.05,
-                shadowRadius: 0.3,
-                elevation: 0.5,
-              }}
-              className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
-              <View className='items-center justify-center'>
-                <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 items-center justify-center'>
-                  <AntDesign name="plus" size={32} color="black" />
-                </View>
-                <AppText className='text-[16px] font-semibold text-secondary-v1 mb-1'>Add New Device</AppText>
-              </View>
-            </Pressable>
-          }
-
-          {
-            activeRooms.length > 0 ?
-              activeRooms.map(item => {
-                return (
-                  <View
+        {
+          loadingDevices ?
+            <View className='flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
+              {
+                [1, 2, 3, 4].map((item, i) => {
+                  return (
+                    <View className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] animate-pulse' key={i}>
+                    </View>
+                  )
+                })
+              }
+            </View> :
+            (
+              <View className='flex flex-row flex-wrap items-stretch gap-2 w-full mt-4 mb-16'>
+                {/* add new device card  */}
+                {
+                  activeTab !== "all" &&
+                  <Pressable
+                    onPress={() => router.push(`/(add-device)/selectDevice?room_id=${activeTab}`)}
                     style={{
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 0.3 },
                       shadowOpacity: 0.05,
                       shadowRadius: 0.3,
-                      elevation: 0.5
+                      elevation: 0.5,
                     }}
-
-                    className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.id}>
-                    <View className='px-6'>
-                      <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
-                        <AntDesign name="bulb" size={24} color="black" />
+                    className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
+                    <View className='items-center justify-center'>
+                      <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 items-center justify-center'>
+                        <AntDesign name="plus" size={32} color="black" />
                       </View>
-                      <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.room_name}</AppText>
-                      <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.powerConsumptionWatts | 0} appliances</AppText>
+                      <AppText className='text-[16px] font-semibold text-secondary-v1 mb-1'>Add New Device</AppText>
                     </View>
+                  </Pressable>
+                }
 
-                    <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>
-                      <AppText className='text-[17px] font-medium text-[#7D7D7D]'>{item.status}</AppText>
-                      <Switch
-                        trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
-                        thumbColor={item.status === "ON" ? '#F9F9F9' : '#fff'}
-                        ios_backgroundColor="#fff"
-                        onValueChange={() => { }}
-                        value={item.status === "ON"}
-                      />
-                    </View>
-                  </View>
-                )
-              }) : (
-                // <AppText>No rooms found</AppText>
-                <></>
-              )
-          }
+                {
+                  devices.length > 0 ?
+                    devices.map(item => {
+                      return (
+                        <View
+                          style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 0.3 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 0.3,
+                            elevation: 0.5
+                          }}
 
-        </View>
+                          className='relative h-[220px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.device_id}>
+                          <View className='px-6'>
+                            <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
+                              <AntDesign name="bulb" size={24} color="black" />
+                            </View>
+                            <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.name}</AppText>
+                            <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.default_wattage_w | 0} watts</AppText>
+                          </View>
+
+                          <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>
+                            <AppText className='text-[17px] font-medium text-[#7D7D7D]'>{item.is_on}</AppText>
+                            <Switch
+                              trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
+                              thumbColor={item.is_on ? '#F9F9F9' : '#fff'}
+                              ios_backgroundColor="#fff"
+                              onValueChange={() => { }}
+                              value={item.is_on}
+                            />
+                          </View>
+                        </View>
+                      )
+                    }) : (
+                      // <AppText>No rooms found</AppText>
+                      <></>
+                    )
+                }
+
+              </View>
+            )
+        }
+
+
+
       </ScrollView>
 
       {/* Add new room modal  */}
@@ -311,7 +378,7 @@ const home = () => {
         snapPoints={snapPoints}
       />
 
-    </SafeAreaView>
+    </SafeAreaView >
   )
 }
 

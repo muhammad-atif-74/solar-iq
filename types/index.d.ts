@@ -50,7 +50,8 @@ export type Device_Template = {
 
 }
 
-type DEVICE_DB = {
+export type DEVICE_DB = {
+    id: number;
     room_id: number;
     user_id: string;
     appliance_id: string | null;
@@ -58,4 +59,27 @@ type DEVICE_DB = {
     is_custom: boolean;
     custom_name?: string | null;
     wattage_override?: number | null
+    category_id?: string | null;
 }
+
+export type DEVICE = {
+    // From template
+    id: string;
+    name: string;
+    category_id: string;
+    category_name: string;
+    default_wattage_w: number;
+    icon: string;
+
+    // From DB
+    device_id: number;
+    room_id: number;
+    user_id: string;
+    appliance_id: string | null;
+    is_on: boolean;
+
+    // Unified fields
+    is_custom: boolean;
+    // custom_name?: string | null;
+    // wattage_override?: number | null;
+};
