@@ -17,7 +17,6 @@ interface AddRoomBottomSheetProps {
 const AddRoomBottomSheet = forwardRef<BottomSheet, AddRoomBottomSheetProps>(
   ({ snapPoints, onAddRoom }, ref) => {
 
-    // ✅ State lives here now, not in the parent
     const [newRoomName, setNewRoomName] = useState('');
     const [keepDefaultRoomName, setKeepDefaultRoomName] = useState(false);
     const [selectedRoomCategory, setSelectedRoomCategory] = useState(defaultRooms[0].id);
@@ -29,7 +28,6 @@ const AddRoomBottomSheet = forwardRef<BottomSheet, AddRoomBottomSheetProps>(
 
       await onAddRoom(selectedRoomCategory, roomName);
 
-      // ✅ Reset after submission
       setNewRoomName('');
       setSelectedRoomCategory(defaultRooms[0].id);
       setKeepDefaultRoomName(false);

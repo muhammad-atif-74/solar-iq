@@ -49,6 +49,7 @@ export type HomeData = {
     home_name: string;
     solar_capacity_kw: number;
     has_solar: boolean;
+    location?: string;
 }
 
 export type Device_Category = {

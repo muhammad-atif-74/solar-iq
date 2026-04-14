@@ -10,6 +10,7 @@ import BottomSheet from '@gorhom/bottom-sheet'
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert, FlatList, Image, RefreshControl, TouchableOpacity, View } from 'react-native'
 
+import EditHomeDataBottomSheet from '@/components/bottomSheets/EditHomeBottomSheet'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { getCompleteRooms } from '../utils'
 
@@ -77,6 +78,20 @@ const rooms = () => {
       Alert.alert("Error", "Something went wrong while creating new room.");
     }
   };
+
+  const editHomeDataBottomSheetRef = useRef<BottomSheet>(null);
+
+  const snapPointsEditHomeData = ['70%'];
+  const openEditHomeDataSheet = () => {
+    editHomeDataBottomSheetRef.current?.expand();
+  };
+  const closeEditHomeDataSheet = () => {
+    editHomeDataBottomSheetRef.current?.close();
+  };
+
+  const handleUpdateHomeData = async (homeName: string, hasSolar: boolean, solarCapacity: string | number | null, location: string | null) => {
+
+  }
 
   useEffect(() => {
     if (!userData?.userid) return;
@@ -150,6 +165,7 @@ const rooms = () => {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       className="w-9 h-9 bg-gray-100 rounded-2xl flex items-center justify-center"
+                      onPress={() => openEditHomeDataSheet()}
                     >
                       <FontAwesome6 name="pen-to-square" size={18} color="#1F2937" />
                     </TouchableOpacity>
@@ -257,13 +273,6 @@ const rooms = () => {
                   style={{ width: '100%', height: '100%', }}
                 />
 
-                {/* <View className='absolute w-full top-4 left-0 right-0 z-10 px-6'>
-                <AppText className={`text-xl font-bold text-[#fff] `}>
-                  {item.room_name}
-                </AppText>
-                <AppText className='text-sm font-semibold text-[#ccc]'>3 Devices</AppText>
-              </View> */}
-
                 <View className='absolute w-full bottom-0 left-0 right-0 bg-white z-10 px-4 py-4'>
                   <View className="flex flex-row items-center gap-4">
 
@@ -278,6 +287,11 @@ const rooms = () => {
                       </AppText>
                       <AppText className='text-sm font-semibold text-[#464646]'>3 Devices</AppText>
                     </View>
+                    <View className='ms-auto'>
+                      <View className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
+                        <DisplayIcon name={"trash-can-outline"} color='#ff1010' />
+                      </View>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -290,6 +304,16 @@ const rooms = () => {
         ref={addRoomBottomSheetRef}
         snapPoints={snapPoints}
         onAddRoom={handleAddRoom}
+      />
+
+      <EditHomeDataBottomSheet
+        homeName={homeData?.home_name || ""}
+        hasSolar={homeData?.has_solar || false}
+        location={homeData?.location || ""}
+        solarCapacity={String(homeData?.solar_capacity_kw) || null}
+        snapPoints={snapPointsEditHomeData}
+        onUpdateHomeData={handleUpdateHomeData}
+        ref={editHomeDataBottomSheetRef}
       />
     </SafeAreaView>
   )
