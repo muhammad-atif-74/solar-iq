@@ -1,7 +1,5 @@
 import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet';
 import { AppText } from '@/components/ui/app-text';
-import { DEVICE_CATALOG } from '@/constants/devices';
-import { defaultRooms } from '@/constants/rooms';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { createRoom, getDevices, getUserHome, getUserRooms, toggleDeviceStatus } from '@/lib/supbase';
@@ -12,46 +10,11 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getCompleteDevices } from '../utils';
 
-const getCompleteDevices = (devices: DEVICE_DB[]) => {
-  // Step 1: Build lookup map
-  const catalogMap = new Map(
-    DEVICE_CATALOG.map((item) => [item.id, item])
-  );
-
-  // Step 2: Transform devices
-  const deviceList: DEVICE[] = devices
-    .map((dbDevice: any) => {
-      const template = catalogMap.get(dbDevice.appliance_id);
-
-      if (!template) return null;
-
-      return {
-        id: template.id,
-        name: dbDevice.is_custom ? dbDevice.custom_name : template.name,
-        category_id: template.category_id,
-        category_name: template.category_name,
-        default_wattage_w:
-          dbDevice.wattage_override ?? template.default_wattage_w,
-        icon: template.icon,
-
-        device_id: dbDevice.id,
-        room_id: dbDevice.room_id,
-        user_id: dbDevice.user_id,
-        appliance_id: dbDevice.appliance_id,
-        is_on: dbDevice.is_on,
-
-        is_custom: dbDevice.is_custom,
-      };
-    })
-    .filter(Boolean) as DEVICE[];
-
-  return deviceList
-
-}
 
 const getWattageInUse = (devices: DEVICE[]) => {
   const on_devices = devices.filter(device => device.is_on)
@@ -85,11 +48,9 @@ const home = () => {
   const [homeData, setHomeData] = useState<HomeData | null>(null)
   const [roomsData, setRoomsData] = useState<UserRoom[] | []>([])
 
+  const [allDevices, setAllDevices] = useState<DEVICE[]>([]);
   const [devices, setDevices] = useState<DEVICE[] | []>([])
 
-  const [newRoomName, setNewRoomName] = useState("")
-  const [keepDefaultRoomName, setKeepDefaultRoomName] = useState(false)
-  const [selectedRoomCategory, setSelectedRoomCategory] = useState(defaultRooms[0].id);
 
   const [loadingRooms, setLoadingRooms] = useState(false)
   const [loadingDevices, setLoadingDevices] = useState(false)
@@ -132,21 +93,24 @@ const home = () => {
   const fetchDevices = async () => {
     setLoadingDevices(true)
     try {
-      const devices: DEVICE_DB[] | null = await getDevices(activeTab === "all" ? null : Number(activeTab));
-      if (!devices) return setDevices([])
+      // ALL devices
+      const all: DEVICE_DB[] | null = await getDevices(null);
+      const allList: DEVICE[] = all ? getCompleteDevices(all) : [];
+      setAllDevices(allList);
 
-      const deviceList: DEVICE[] = getCompleteDevices(devices)
-      // console.log("DEVICES : _ ", deviceList)
-      setDevices(deviceList);
+      // (filtered)
+      const filtered: DEVICE_DB[] | null = await getDevices(activeTab === "all" ? null : Number(activeTab));
+      const filteredList: DEVICE[] = filtered ? getCompleteDevices(filtered) : [];
 
-    }
-    catch (err) {
+      setDevices(filteredList);
+
+    } catch (err) {
       console.log(err)
-    }
-    finally {
+    } finally {
       setLoadingDevices(false)
     }
   }
+
 
   const toggleDeviceStatusOnOff = async (id: number, status: boolean) => {
     try {
@@ -177,35 +141,15 @@ const home = () => {
   };
 
 
-  const addRoom = async () => {
-    if ((newRoomName === "" && !keepDefaultRoomName)) {
-      Alert.alert("Error", "Enter room name or use check keep default name to continue.")
-      return;
-    }
-    if ((selectedRoomCategory === "")) {
-      Alert.alert("Error", "Select room category to continue.")
-      return;
-    }
+  const handleAddRoom = async (categoryId: string, roomName: string) => {
     try {
-      let roomName = ""
-      if (keepDefaultRoomName) {
-        roomName = defaultRooms.find(room => room.id === selectedRoomCategory)?.name!
-      }
-      else {
-        roomName = newRoomName
-      }
-      await createRoom(userData.userid, selectedRoomCategory, roomName)
-      setNewRoomName("")
-      setSelectedRoomCategory("")
-      setKeepDefaultRoomName(false)
-      closeAddRoomSheet()
-      fetchRooms()
+      await createRoom(userData.userid, categoryId, roomName);
+      closeAddRoomSheet();
+      fetchRooms();
+    } catch (err) {
+      Alert.alert("Error", "Something went wrong while creating new room.");
     }
-    catch (err) {
-      Alert.alert("Error", "Something went wrong while creating new room.")
-      console.log(err)
-    }
-  }
+  };
 
 
 
@@ -216,13 +160,6 @@ const home = () => {
     fetchRooms()
   }, [userData])
 
-  const activeRooms = useMemo(() => {
-    if (activeTab === "all") return roomsData;
-
-    return roomsData.filter(
-      (room) => room.room_id === String(activeTab)
-    );
-  }, [activeTab, roomsData]);
 
   useEffect(() => {
     fetchDevices()
@@ -255,7 +192,7 @@ const home = () => {
             <AppText className='text-sm text-[#838A8F]'>{new Date().toLocaleDateString('en-US', { weekday: 'long' })},{" "}{new Date().getDate()} {new Date().getFullYear()}</AppText>
           </View>
           <View className='w-[20%]'>
-            <TouchableOpacity activeOpacity={0.8}>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/settings")}>
               <FontAwesome name="gear" className='ms-auto' size={28} color="black" />
             </TouchableOpacity>
           </View>
@@ -487,15 +424,8 @@ const home = () => {
       {/* Add new room modal  */}
       <AddRoomBottomSheet
         ref={addRoomBottomSheetRef}
-        addRoom={addRoom}
-        defaultRooms={defaultRooms}
-        keepDefaultRoomName={keepDefaultRoomName}
-        setKeepDefaultRoomName={setKeepDefaultRoomName}
-        newRoomName={newRoomName}
-        setNewRoomName={setNewRoomName}
-        selectedRoomCategory={selectedRoomCategory}
-        setSelectedRoomCategory={setSelectedRoomCategory}
         snapPoints={snapPoints}
+        onAddRoom={handleAddRoom}  
       />
 
     </SafeAreaView >

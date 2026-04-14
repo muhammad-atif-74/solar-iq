@@ -12,6 +12,7 @@ export type Room = {
     category: string;
     isDefault?: boolean;
     room_id?: number | string;
+    image?: string;
 }
 
 export type UserRoom = {
@@ -21,6 +22,22 @@ export type UserRoom = {
     room_name: string;
     user_id: string;
 }
+
+export type Detailed_Room = {
+    id: string;
+    name: string;
+    icon: string;
+    category: string;
+    image?: string;
+    isDefault?: boolean;
+    room_id?: number | string;
+
+    created_at?: string;
+    db_id: number;
+    room_name: string;
+    user_id: string;
+}
+
 export type Selected_Room = {
     id: string;
     qty: number;

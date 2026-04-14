@@ -2,8 +2,8 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -43,10 +43,10 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="explore"
+        name="rooms"
         options={{
           tabBarIcon: ({ color }) => (
-            <AntDesign name="plus-circle" size={24} color={color} />
+            <MaterialCommunityIcons name="door-sliding" size={24} color={color} />
           ),
         }}
       />

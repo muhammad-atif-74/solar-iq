@@ -1,26 +1,16 @@
 import { AppText } from '@/components/ui/app-text'
 import CustomButton from '@/components/ui/custom-button'
+import DisplayIcon from '@/components/ui/DisplayIcon'
 import { DEVICE_CATALOG, DEVICE_CATEGORIES } from '@/constants/devices'
 import { useGlobalContext } from '@/context/GlobalProvider'
 import { addNewDevices } from '@/lib/supbase'
 import { Device_Category, DEVICE_DB, Device_Template } from '@/types'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { Alert, TouchableOpacity, View } from 'react-native'
 import { FlatList } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-
-const DisplayIcon = ({ name }: { name: string }) => {
-    return (
-        <MaterialCommunityIcons
-            name={name as any}
-            size={24}
-            color="#333"
-        />
-    );
-};
 
 const selectDevice = () => {
     const { session, userData } = useGlobalContext();
@@ -132,17 +122,31 @@ const selectDevice = () => {
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             activeOpacity={0.7}
-                            className={`flex-row items-center rounded-lg px-[18px] py-3 mb-2 gap-3 ${selectedDeviceIds.includes(item.id) ? 'bg-secondary-v1' : 'bg-[#F7F7F7]'
+                            className={`rounded-lg px-[18px] py-3 mb-2  ${selectedDeviceIds.includes(item.id) ? 'bg-secondary-v1' : 'bg-[#F7F7F7]'
                                 }`}
                             onPress={() => handleSelectDevice(item.id)}
                         >
-                            <View className='w-12 h-12 p-2 bg-secondary-v2 rounded-lg flex items-center justify-center'>
-                                <DisplayIcon name={item.icon} />
+                            <View className='flex-row items-center gap-3'>
+                                <View className='w-12 h-12 p-2 bg-secondary-v2 rounded-lg flex items-center justify-center'>
+                                    <DisplayIcon name={item.icon} />
+                                </View>
+                                <View>
+
+                                    <AppText className={`text-base flex-1 my-0 ${selectedDeviceIds.includes(item.id) ? 'text-white' : 'text-[#636363]'
+                                        }`}>
+                                        {item.name}
+                                    </AppText>
+
+                                    <AppText className={`text-xs flex-1 my-0 ${selectedDeviceIds.includes(item.id) ? 'text-white' : 'text-[#636363]'
+                                        }`}>
+                                        {item.default_wattage_w} W
+                                    </AppText>
+                                </View>
                             </View>
-                            <AppText className={`text-sm flex-1 ${selectedDeviceIds.includes(item.id) ? 'text-white' : 'text-[#636363]'
-                                }`}>
-                                {item.name}
-                            </AppText>
+
+
+
+
                         </TouchableOpacity>
                     )}
                 />

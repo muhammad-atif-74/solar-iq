@@ -7,6 +7,7 @@ export const defaultRooms: Room[] = [
     icon: "home",
     category: "all",
     isDefault: true,
+    image: null,
   },
   {
     id: "living_room",
@@ -14,6 +15,7 @@ export const defaultRooms: Room[] = [
     icon: "sofa",
     category: "living",
     isDefault: true,
+    image: require("@/assets/images/rooms/livingroom.png"),
   },
   {
     id: "bedroom",
@@ -21,6 +23,7 @@ export const defaultRooms: Room[] = [
     icon: "bed",
     category: "sleeping",
     isDefault: true,
+    image: require("@/assets/images/rooms/bedroom.png"),
   },
   {
     id: "kitchen",
@@ -28,6 +31,7 @@ export const defaultRooms: Room[] = [
     icon: "fridge",
     category: "utility",
     isDefault: true,
+    image: require("@/assets/images/rooms/kitchen.png"),
   },
   {
     id: "bathroom",
@@ -35,6 +39,7 @@ export const defaultRooms: Room[] = [
     icon: "shower",
     category: "utility",
     isDefault: true,
+    image: require("@/assets/images/rooms/bathroom.png"),
   },
   {
     id: "dining_room",
@@ -42,6 +47,7 @@ export const defaultRooms: Room[] = [
     icon: "silverware",
     category: "living",
     isDefault: false,
+    image: require("@/assets/images/rooms/livingroom.png"),
   },
   {
     id: "office",
@@ -49,6 +55,7 @@ export const defaultRooms: Room[] = [
     icon: "desk",
     category: "work",
     isDefault: false,
+    image: require("@/assets/images/rooms/officeroom.jpg"),
   },
   {
     id: "kids_room",
@@ -56,6 +63,7 @@ export const defaultRooms: Room[] = [
     icon: "teddy-bear",
     category: "sleeping",
     isDefault: false,
+    image: require("@/assets/images/rooms/kidsroom.jpg"),
   },
   {
     id: "guest_room",
@@ -63,6 +71,7 @@ export const defaultRooms: Room[] = [
     icon: "bed-double",
     category: "sleeping",
     isDefault: false,
+    image: require("@/assets/images/rooms/guestroom.jpg"),
   },
   {
     id: "hallway",
@@ -70,6 +79,7 @@ export const defaultRooms: Room[] = [
     icon: "door",
     category: "transition",
     isDefault: false,
+    image: require("@/assets/images/rooms/balcony.jpg"),
   },
   {
     id: "garage",
@@ -77,6 +87,7 @@ export const defaultRooms: Room[] = [
     icon: "garage",
     category: "utility",
     isDefault: false,
+    image: require("@/assets/images/rooms/garage.jpg"),
   },
   {
     id: "garden",
@@ -84,6 +95,7 @@ export const defaultRooms: Room[] = [
     icon: "tree",
     category: "outdoor",
     isDefault: false,
+    image: require("@/assets/images/rooms/garden.jpg"),
   },
   {
     id: "balcony",
@@ -91,5 +103,6 @@ export const defaultRooms: Room[] = [
     icon: "balcony",
     category: "outdoor",
     isDefault: false,
-  },
+    image: require("@/assets/images/rooms/balcony.jpg"),
+  }
 ]
