@@ -2,7 +2,7 @@ import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet'
 import { AppText } from '@/components/ui/app-text'
 import DisplayIcon from '@/components/ui/DisplayIcon'
 import { useGlobalContext } from '@/context/GlobalProvider'
-import { createRoom, getUserHome, getUserRooms, updateHomeData } from '@/lib/supbase'
+import { createRoom, deleteRoom, getUserHome, getUserRooms, updateHomeData } from '@/lib/supbase'
 import { Detailed_Room, HomeData, UserRoom } from '@/types'
 import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6'
@@ -11,16 +11,19 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Alert, FlatList, Image, RefreshControl, TouchableOpacity, View } from 'react-native'
 
 import EditHomeDataBottomSheet from '@/components/bottomSheets/EditHomeBottomSheet'
+import { useFetchDevices } from '@/hooks/useFetchDevices'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { getCompleteRooms } from '../utils'
 
 const rooms = () => {
   const { session, userData } = useGlobalContext();
+  const { fetchDevices, devices } = useFetchDevices();
 
   const [homeData, setHomeData] = useState<HomeData | null>(null)
   const [loadingHome, setLoadingHome] = useState(true)
   const [loadingRooms, setLoadingRooms] = useState(true)
   const [roomsData, setRoomsData] = useState<Detailed_Room[] | []>([])
+  const [deleteRoomId, setDeleteRoomId] = useState<number | null>(null)
 
   const [refreshing, setRefreshing] = useState(false)
 
@@ -104,11 +107,41 @@ const rooms = () => {
 
   }
 
+
+  const handleDeleteRoom = (roomId: number) => {
+    Alert.alert(
+      "Delete Room",
+      "Are you sure you want to delete this room? All devices inside will also be removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteRoom(roomId);
+
+              setRoomsData(prev => prev.filter(r => r.db_id !== roomId));
+              fetchRooms();
+
+            } catch (err) {
+              Alert.alert("Error", "Failed to delete room");
+              console.log(err);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+
+
   useEffect(() => {
     if (!userData?.userid) return;
 
     fetchHome()
     fetchRooms()
+    fetchDevices()
   }, [userData])
 
   return (
@@ -163,7 +196,7 @@ const rooms = () => {
                 <View
                   style={{
                   }}
-                  className="relative w-full rounded-3xl bg-white py-3 px-5 mb-4 border border-gray-100 overflow-hidden"
+                  className="relative w-full rounded-3xl bg-white py-3 px-5 mb-6 border border-gray-100 overflow-hidden"
                 >
                   {/* Header Row */}
                   <View className="flex-row justify-between items-center mb-2">
@@ -303,12 +336,12 @@ const rooms = () => {
                       <AppText className={`text-xl font-bold text-[#333] `}>
                         {item.room_name}
                       </AppText>
-                      <AppText className='text-sm font-semibold text-[#464646]'>3 Devices</AppText>
+                      <AppText className='text-sm font-semibold text-[#464646]'>{devices.length > 0 && devices.filter(d => d.room_id == item.db_id).length} Device{devices.length > 0 && devices.filter(d => d.room_id == item.db_id).length > 1 ? 's' : ''}</AppText>
                     </View>
                     <View className='ms-auto'>
-                      <View className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
+                      <TouchableOpacity activeOpacity={0.7} onPress={() => handleDeleteRoom(item.db_id)} className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
                         <DisplayIcon name={"trash-can-outline"} color='#ff1010' />
-                      </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>

@@ -233,6 +233,19 @@ export const getUserRooms = async (userid: string) => {
     }
 }
 
+export const deleteRoom = async (roomId: number) => {
+    try {
+        const { data, error } = await supabase.from("rooms").delete().eq("id", roomId)
+
+        if (error) throw error;
+        return data
+    }
+    catch (err: any) {
+        console.log("Error deleting room ", err)
+        throw err
+    }
+}
+
 export const addNewDevice = async (room_id: number, user_id: string, appliance_id: string | null, is_on: boolean, is_custom: boolean, custom_name: string | null, wattage_override: number | null) => {
     try {
         const { data, error } = await supabase.from("devices").insert({
@@ -263,25 +276,25 @@ export const addNewDevices = async (devices: Omit<DEVICE_DB, "id">[]) => {
 
 export const getDevices = async (room_id: number | null): Promise<DEVICE_DB[] | null> => {
     try {
-      let query = supabase
-        .from("devices")
-        .select("*")
-        .order("created_at", { ascending: true });
-  
-      if (room_id) {
-        query = query.eq("room_id", room_id);
-      }
-  
-      const { data, error } = await query;
-  
-      if (error) throw error;
-      return data;
+        let query = supabase
+            .from("devices")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+        if (room_id) {
+            query = query.eq("room_id", room_id);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        return data;
     } catch (err: any) {
-      console.log("Error fetching devices ", err);
-      throw err;
+        console.log("Error fetching devices ", err);
+        throw err;
     }
-  };
-  
+};
+
 
 export const toggleDeviceStatus = async (id: number, status: boolean) => {
     try {
