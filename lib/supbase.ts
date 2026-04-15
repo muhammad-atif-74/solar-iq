@@ -147,6 +147,20 @@ export const createNewHome = async (userid: string, home_name: string | null, lo
     }
 }
 
+export const updateHomeData = async (userid: string, homeName: string, hasSolar: boolean, solarCapacity: string | number | null, location: string | null) => {
+    try {
+        const { data, error } = await supabase.from('homes').update({ home_name: homeName, location, has_solar: hasSolar, solar_capacity_kw: hasSolar ? solarCapacity : 0 }).eq('user_id', userid).select().single();
+
+        if (error) throw error;
+
+        return data;
+    }
+    catch (err: any) {
+        console.error('Error updating home data:', err.message);
+        throw new Error(err.message);
+    }
+}
+
 export const createRoom = async (user_id: string, room_id: string, room_name: string) => {
     try {
         const { data, error } = await supabase.from("rooms")

@@ -2,7 +2,7 @@ import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet'
 import { AppText } from '@/components/ui/app-text'
 import DisplayIcon from '@/components/ui/DisplayIcon'
 import { useGlobalContext } from '@/context/GlobalProvider'
-import { createRoom, getUserHome, getUserRooms } from '@/lib/supbase'
+import { createRoom, getUserHome, getUserRooms, updateHomeData } from '@/lib/supbase'
 import { Detailed_Room, HomeData, UserRoom } from '@/types'
 import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6'
@@ -90,6 +90,17 @@ const rooms = () => {
   };
 
   const handleUpdateHomeData = async (homeName: string, hasSolar: boolean, solarCapacity: string | number | null, location: string | null) => {
+    // console.log(homeName, hasSolar, solarCapacity, location)
+
+    try {
+      await updateHomeData(userData.userid, homeName, hasSolar, solarCapacity, location);
+      closeEditHomeDataSheet()
+      fetchHome()
+    }
+    catch (err) {
+      Alert.alert("Something went wrong while updating home.")
+      console.log(err)
+    }
 
   }
 
@@ -172,9 +183,16 @@ const rooms = () => {
                   </View>
 
                   {/* Welcome Title */}
-                  <AppText className="font-bold text-[24px] text-[#111827] leading-[32px] mb-1 uppercase">
+                  <AppText className="font-bold text-[24px] text-[#111827] leading-[32px] uppercase">
                     {homeData?.home_name || userData?.username || "Guest"} {homeData?.home_name == "" && "'s"}
                   </AppText>
+                  {/* Location */}
+                  {
+                    homeData?.location &&
+                    <AppText className="font-medium text-[12px] text-[#2c2c2c] mb-1">
+                      {homeData?.location}
+                    </AppText>
+                  }
 
                   {/* Solar Status Section */}
                   {homeData?.has_solar ? (
