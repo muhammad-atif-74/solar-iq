@@ -12,6 +12,7 @@ import { Alert, FlatList, Image, RefreshControl, TouchableOpacity, View } from '
 
 import EditHomeDataBottomSheet from '@/components/bottomSheets/EditHomeBottomSheet'
 import { useFetchDevices } from '@/hooks/useFetchDevices'
+import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { getCompleteRooms } from '../utils'
 
@@ -312,7 +313,7 @@ const rooms = () => {
             <TouchableOpacity
               activeOpacity={0.8}
               className={`rounded-xl overflow-hidden border border-gray-100 mb-2 h-64`}
-              onPress={() => { }}
+              onPress={() => { router.push({ pathname: "/viewRoom", params: { room: encodeURIComponent(JSON.stringify(item)) } }) }}
             >
               <View className='relative rounded-lg'>
                 <Image

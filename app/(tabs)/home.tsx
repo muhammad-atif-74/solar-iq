@@ -392,7 +392,7 @@ const home = () => {
                               }
                             </View>
                             <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.name}</AppText>
-                            <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.default_wattage_w | 0} watts</AppText>
+                            <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.default_wattage_w ?? 0} watts</AppText>
                           </View>
 
                           <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>

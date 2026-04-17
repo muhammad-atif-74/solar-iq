@@ -40,7 +40,8 @@ const selectDevice = () => {
         try {
             setAddingDevices(true)
             await addNewDevices(devices)
-            router.replace(`/home?room_id=${room_id}`)
+            // router.replace(`/home?room_id=${room_id}`)
+            router.back()
         }
         catch (err) {
             console.log(err)
