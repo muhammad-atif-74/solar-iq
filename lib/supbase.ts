@@ -311,6 +311,33 @@ export const toggleDeviceStatus = async (id: number, status: boolean) => {
 
 }
 
+export const toggleAllDevicesStatus = async (
+    status: boolean,
+    roomId?: number
+  ) => {
+    try {
+      let query = supabase
+        .from('devices')
+        .update({ is_on: status });
+  
+      if (roomId) {
+        query = query.eq('room_id', roomId);
+      } else {
+        query = query.neq('id', 0); // all devices
+      }
+  
+      const { data, error } = await query.select();
+  
+      if (error) throw error;
+  
+      return data;
+    } catch (err: any) {
+      console.error('Error updating devices:', err.message);
+      throw new Error(err.message);
+    }
+  };
+  
+
 export const deleteDevice = async (id: number) => {
     try {
         const { data, error } = await supabase.from("devices").delete().eq("id", id)

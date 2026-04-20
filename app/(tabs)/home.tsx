@@ -3,8 +3,9 @@ import { AppText } from '@/components/ui/app-text';
 import Device from '@/components/ui/Device';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { createRoom, getDevices, getUserHome, getUserRooms, toggleDeviceStatus } from '@/lib/supbase';
+import { createRoom, getDevices, getUserHome, getUserRooms, toggleAllDevicesStatus, toggleDeviceStatus } from '@/lib/supbase';
 import { DEVICE, DEVICE_DB, HomeData, UserRoom } from '@/types';
+import { FontAwesome5 } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -118,6 +119,20 @@ const home = () => {
       Alert.alert("Error", "Something went wrong while toggling.");
     }
   };
+
+  const handleToggleAll = async (status: boolean) => {
+    try {
+
+      await toggleAllDevicesStatus(status);
+
+      setDevices(prev =>
+        prev.map(device => ({ ...device, is_on: status }))
+      )
+    }
+    catch (err) {
+      Alert.alert("Error", "Something went wrong while toggling.");
+    }
+  }
 
 
   const handleAddRoom = async (categoryId: string, roomName: string) => {
@@ -255,15 +270,40 @@ const home = () => {
           const usedW = getWattageInUse(devices);
           const remaining = totalW - usedW;
           const isOver = usedW > totalW;
+          console.log(devices)
+          const isAnyDeviceOn = devices.some(dev => dev.is_on);
 
           return (
-            <View className={`flex-row items-center gap-2 px-4 py-2 rounded-full mb-6 self-start ${isOver ? 'bg-red-100' : 'bg-green-100'}`}>
-              <View className={`w-2 h-2 rounded-full ${isOver ? 'bg-red-500' : 'bg-green-500'}`} />
-              <AppText className={`text-xs font-bold ${isOver ? 'text-red-600' : 'text-green-600'}`}>
-                {isOver
-                  ? `Reduce ${Math.abs(remaining)}W to stay within limit`
-                  : `You can add up to ~${remaining}W more`}
-              </AppText>
+            <View className='flex flex-row items-center justify-between mb-6 mt-1 '>
+              <View className={`flex-row items-center gap-2 px-4 py-2 rounded-full self-start ${isOver ? 'bg-red-100' : 'bg-green-100'}`}>
+                <View className={`w-2 h-2 rounded-full ${isOver ? 'bg-red-500' : 'bg-green-500'}`} />
+                <AppText className={`text-xs font-bold ${isOver ? 'text-red-600' : 'text-green-600'}`}>
+                  {isOver
+                    ? `Reduce ${Math.abs(remaining)}W to stay within limit`
+                    : `You can add up to ~${remaining}W more`}
+                </AppText>
+              </View>
+              {/* TURN OFF/ON ALL  */}
+              <TouchableOpacity onPress={() => handleToggleAll(!isAnyDeviceOn)} className='px-4 py-2 rounded-full bg-secondary-v1 flex flex-row gap-2'>
+
+                {
+                  isAnyDeviceOn ? (
+                    <>
+                      <FontAwesome5 name="power-off" size={12} color="white" />
+                      <AppText className="text-xs font-bold text-white">
+                        Turn Off All
+                      </AppText>
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesome5 name="lightbulb" size={12} color="white" />
+                      <AppText className="text-xs font-bold text-white">
+                        Turn On All
+                      </AppText>
+                    </>
+                  )
+                }
+              </TouchableOpacity>
             </View>
           );
         })()}
