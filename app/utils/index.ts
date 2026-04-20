@@ -74,3 +74,14 @@ export const getCompleteRooms = (rooms: UserRoom[]) => {
     return roomsList
 
 }
+
+export const getWattageInUse = (devices: DEVICE[]) => {
+    const on_devices = devices.filter(device => device.is_on)
+  
+    let wattageInUse = 0;
+    on_devices.forEach(device => {
+      wattageInUse += Number(device.default_wattage_w)
+    })
+  
+    return wattageInUse
+  }

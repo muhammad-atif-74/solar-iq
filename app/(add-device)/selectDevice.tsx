@@ -5,6 +5,7 @@ import { DEVICE_CATALOG, DEVICE_CATEGORIES } from '@/constants/devices'
 import { useGlobalContext } from '@/context/GlobalProvider'
 import { addNewDevices } from '@/lib/supbase'
 import { Device_Category, DEVICE_DB, Device_Template } from '@/types'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { Alert, TouchableOpacity, View } from 'react-native'
@@ -27,6 +28,7 @@ const selectDevice = () => {
     // user_id, room_id, appliance_id, is_on is_custom, custom_name, wattage_override. 
 
     const handleContinue = async () => {
+        if(selectedDeviceIds.length === 0) return
         if (!session || !userData) return
         const devices: Omit<DEVICE_DB, "id">[] = selectedDeviceIds.map(device_id => ({
             appliance_id: device_id,
@@ -80,7 +82,18 @@ const selectDevice = () => {
         <SafeAreaView className='flex-1'>
             <View className='flex-1 px-4 justify-between'>
                 <View style={{ paddingTop: 20, paddingBottom: 8 }}>
-                    <AppText className='text-2xl font-bold text-center mb-4'>Select Devices</AppText>
+                    {/* <AppText className='text-2xl font-bold text-center mb-4'>Select Devices</AppText> */}
+                    <View className='flex flex-row items-center justify-between mb-6'>
+                        <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} className='w-10 h-10 rounded-full overflow-hidden bg-secondary-v1 p-1 flex items-center justify-center'>
+                            <MaterialCommunityIcons name='arrow-left' size={24} color={"#fff"} />
+                        </TouchableOpacity>
+                        <View>
+                            <AppText className='text-3xl font-bold my-0 text-secondary-v1'>Select Devices</AppText>
+                        </View>
+                        <View className='w-10'>
+                            
+                        </View>
+                    </View>
 
                     <FlatList
                         horizontal
@@ -154,7 +167,7 @@ const selectDevice = () => {
 
                 <CustomButton
                     title={`Add (${selectedDeviceIds.length}) devices`}
-                    onPress={handleContinue}
+                    onPress={handleContinue || selectedDeviceIds.length < 1}
                     extraClasses=''
                     isDisable={addingDevices}
                     isLoading={addingDevices}

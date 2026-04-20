@@ -310,3 +310,16 @@ export const toggleDeviceStatus = async (id: number, status: boolean) => {
     }
 
 }
+
+export const deleteDevice = async (id: number) => {
+    try {
+        const { data, error } = await supabase.from("devices").delete().eq("id", id)
+
+        if (error) throw error;
+        return data
+    }
+    catch (err: any) {
+        console.log("Error deleting device ", err)
+        throw err
+    }
+}

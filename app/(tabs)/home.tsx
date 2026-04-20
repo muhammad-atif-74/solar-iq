@@ -1,41 +1,20 @@
 import AddRoomBottomSheet from '@/components/bottomSheets/AddRoomBottomSheet';
 import { AppText } from '@/components/ui/app-text';
+import Device from '@/components/ui/Device';
 import { IMAGES } from '@/constants/theme';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { createRoom, getDevices, getUserHome, getUserRooms, toggleDeviceStatus } from '@/lib/supbase';
 import { DEVICE, DEVICE_DB, HomeData, UserRoom } from '@/types';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getCompleteDevices } from '../utils';
+import { getCompleteDevices, getWattageInUse } from '../utils';
 
-
-const getWattageInUse = (devices: DEVICE[]) => {
-  const on_devices = devices.filter(device => device.is_on)
-
-  let wattageInUse = 0;
-  on_devices.forEach(device => {
-    wattageInUse += Number(device.default_wattage_w)
-  })
-
-  return wattageInUse
-}
-
-const DisplayIcon = ({ name }: { name: string }) => {
-  return (
-    <MaterialCommunityIcons
-      name={name as any}
-      size={24}
-      color="#333"
-    />
-  );
-};
 
 const home = () => {
   const { session, userData } = useGlobalContext();
@@ -375,37 +354,7 @@ const home = () => {
                   devices.length > 0 ?
                     devices.map(item => {
                       return (
-                        <View
-                          style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 0.3 },
-                            shadowOpacity: 0.05,
-                            shadowRadius: 0.3,
-                            elevation: 0.5
-                          }}
-
-                          className='relative h-[180px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED]' key={item.device_id}>
-                          <View className='px-6'>
-                            <View className='w-[45px] h-[45px] bg-[#DADADA] rounded-full mb-4 flex items-center justify-center'>
-                              {
-                                DisplayIcon({ name: item.icon })
-                              }
-                            </View>
-                            <AppText className='text-[18px] font-bold text-secondary-v1 mb-1'>{item.name}</AppText>
-                            <AppText className='text-[13px] font-semibold text-[#A7A7A7]'>{item.default_wattage_w ?? 0} watts</AppText>
-                          </View>
-
-                          <View className='absolute bottom-2 left-0 right-0 w-full px-6 mx-auto flex flex-row items-center justify-between'>
-                            <AppText className='text-[17px] font-medium text-[#7D7D7D]'>{item.is_on}</AppText>
-                            <Switch
-                              trackColor={{ false: '#D6D6D6', true: '#1c1c1c' }}
-                              thumbColor={item.is_on ? '#F9F9F9' : '#fff'}
-                              ios_backgroundColor="#fff"
-                              onValueChange={() => { toggleDeviceStatusOnOff(item.device_id, item.is_on ? false : true) }}
-                              value={item.is_on}
-                            />
-                          </View>
-                        </View>
+                        <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} key={item.id} />
                       )
                     }) : (
                       // <AppText>No rooms found</AppText>
@@ -425,7 +374,7 @@ const home = () => {
       <AddRoomBottomSheet
         ref={addRoomBottomSheetRef}
         snapPoints={snapPoints}
-        onAddRoom={handleAddRoom}  
+        onAddRoom={handleAddRoom}
       />
 
     </SafeAreaView >
