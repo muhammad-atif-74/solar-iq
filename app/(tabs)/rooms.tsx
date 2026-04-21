@@ -12,9 +12,9 @@ import { Alert, FlatList, Image, RefreshControl, TouchableOpacity, View } from '
 
 import EditHomeDataBottomSheet from '@/components/bottomSheets/EditHomeBottomSheet'
 import { useFetchDevices } from '@/hooks/useFetchDevices'
+import { getCompleteRooms } from '@/utils'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { getCompleteRooms } from '../utils'
 
 const rooms = () => {
   const { session, userData } = useGlobalContext();
@@ -142,7 +142,7 @@ const rooms = () => {
 
     fetchHome()
     fetchRooms()
-    fetchDevices()
+    fetchDevices("all", userData.userid)
   }, [userData])
 
   return (

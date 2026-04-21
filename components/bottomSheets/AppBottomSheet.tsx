@@ -11,7 +11,13 @@ interface AppBottomSheetProps {
 const AppBottomSheet = forwardRef<BottomSheet, AppBottomSheetProps>(
   ({ snapPoints, title, children }, ref) => {
     return (
-      <BottomSheet ref={ref} index={-1} snapPoints={snapPoints} enablePanDownToClose>
+      <BottomSheet 
+      ref={ref} index={-1} 
+      snapPoints={snapPoints} enablePanDownToClose
+      keyboardBehavior='interactive'
+      keyboardBlurBehavior='restore'
+      android_keyboardInputMode='adjustResize'
+      >
         <BottomSheetView style={{ padding: 20 }}>
           {title && (
             <AppText className='text-2xl font-bold text-center mb-4'>

@@ -274,15 +274,18 @@ export const addNewDevices = async (devices: Omit<DEVICE_DB, "id">[]) => {
     }
 }
 
-export const getDevices = async (room_id: number | null): Promise<DEVICE_DB[] | null> => {
+export const getDevices = async (room_id: number | null, user_id?: number | null): Promise<DEVICE_DB[] | null> => {
     try {
         let query = supabase
             .from("devices")
             .select("*")
             .order("created_at", { ascending: true });
 
-        if (room_id) {
+        if (room_id !== null && room_id !== undefined) {
             query = query.eq("room_id", room_id);
+        }
+        if (user_id !== null && user_id !== undefined) {
+            query = query.eq("user_id", user_id)
         }
 
         const { data, error } = await query;
@@ -314,29 +317,29 @@ export const toggleDeviceStatus = async (id: number, status: boolean) => {
 export const toggleAllDevicesStatus = async (
     status: boolean,
     roomId?: number
-  ) => {
+) => {
     try {
-      let query = supabase
-        .from('devices')
-        .update({ is_on: status });
-  
-      if (roomId) {
-        query = query.eq('room_id', roomId);
-      } else {
-        query = query.neq('id', 0); // all devices
-      }
-  
-      const { data, error } = await query.select();
-  
-      if (error) throw error;
-  
-      return data;
+        let query = supabase
+            .from('devices')
+            .update({ is_on: status });
+
+        if (roomId) {
+            query = query.eq('room_id', roomId);
+        } else {
+            query = query.neq('id', 0); // all devices
+        }
+
+        const { data, error } = await query.select();
+
+        if (error) throw error;
+
+        return data;
     } catch (err: any) {
-      console.error('Error updating devices:', err.message);
-      throw new Error(err.message);
+        console.error('Error updating devices:', err.message);
+        throw new Error(err.message);
     }
-  };
-  
+};
+
 
 export const deleteDevice = async (id: number) => {
     try {

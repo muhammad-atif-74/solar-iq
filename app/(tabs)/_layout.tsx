@@ -3,7 +3,6 @@ import React from 'react';
 
 
 import Feather from '@expo/vector-icons/Feather';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -37,7 +36,7 @@ export default function TabLayout() {
         name="home"
         options={{
           tabBarIcon: ({ color }) => (
-            <Feather name="home" size={24} color={color} />
+            <Feather name="grid" size={26} color={color} />
           ),
         }}
       />
@@ -46,7 +45,7 @@ export default function TabLayout() {
         name="rooms"
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="door-sliding" size={24} color={color} />
+            <Feather name="home" size={26} color={color} />
           ),
         }}
       />
@@ -55,7 +54,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           tabBarIcon: ({ color }) => (
-            <Octicons name="gear" size={24} color={color} />
+            <Octicons name="gear" size={26} color={color} />
           ),
         }}
       />

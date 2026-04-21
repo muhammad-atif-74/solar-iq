@@ -1,6 +1,6 @@
-import { getCompleteDevices } from "@/app/utils";
 import { getDevices } from "@/lib/supbase";
 import { DEVICE } from "@/types";
+import { getCompleteDevices } from "@/utils";
 import { useState } from "react";
 
 export const useFetchDevices = () => {
@@ -8,10 +8,10 @@ export const useFetchDevices = () => {
   const [devices, setDevices] = useState<DEVICE[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchDevices = async (activeTab: string = "all") => {
+  const fetchDevices = async (activeTab: string = "all", user_id: number | null = null) => {
     setLoading(true);
     try {
-      const all = await getDevices(null);
+      const all = await getDevices(null, user_id);
       const allList = all ? getCompleteDevices(all) : [];
 
       setAllDevices(allList);

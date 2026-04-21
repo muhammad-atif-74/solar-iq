@@ -1,6 +1,7 @@
 import { AppText } from '@/components/ui/app-text'
 import Device from '@/components/ui/Device'
 import DisplayIcon from '@/components/ui/DisplayIcon'
+import { useGlobalContext } from '@/context/GlobalProvider'
 import { useFetchDevices } from '@/hooks/useFetchDevices'
 import { deleteDevice, deleteRoom, toggleDeviceStatus } from '@/lib/supbase'
 import { DEVICE } from '@/types'
@@ -12,7 +13,7 @@ import { Alert, RefreshControl, ScrollView, TouchableOpacity, View } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const viewRoom = () => {
-
+    const {userData} = useGlobalContext();
     const { room } = useLocalSearchParams(); // it returns string or string[]
     const { fetchDevices, devices: fetchedDevices, loading: devicesLoading } = useFetchDevices()
 
@@ -31,7 +32,7 @@ const viewRoom = () => {
     useFocusEffect(
         useCallback(() => {
             if (roomData?.db_id) {
-                fetchDevices(roomData.db_id);
+                fetchDevices(roomData.db_id, userData.userid);
             }
         }, [roomData?.db_id])
     );
@@ -105,7 +106,7 @@ const viewRoom = () => {
                     onPress: async () => {
                         try {
                             await deleteDevice(id);
-                            fetchDevices()
+                            fetchDevices("all", userData.userid)
 
                         } catch (err) {
                             Alert.alert("Error", "Failed to delete device");

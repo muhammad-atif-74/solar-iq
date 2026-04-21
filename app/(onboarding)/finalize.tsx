@@ -15,7 +15,7 @@ const Finalize = () => {
 
   const updateIsOnboarded = async () => {
     try {
-      await updateUser(userData.userid, true)
+      await updateUser(userData?.userid, true)
     }
     catch (err) {
       Alert.alert("Something went wrong. ")
@@ -25,7 +25,7 @@ const Finalize = () => {
 
   const createHome = async () => {
     try {
-      await createNewHome(userData.userid, onboardingData?.home_name || null, null, onboardingData?.is_solar || false, onboardingData?.solar_capacity_kw || null)
+      await createNewHome(userData?.userid, onboardingData?.home_name || null, null, onboardingData?.is_solar || false, onboardingData?.solar_capacity_kw || null)
     }
     catch (err) {
       Alert.alert("Something went wrong while creating home.")
@@ -36,7 +36,7 @@ const Finalize = () => {
   const createNewRooms = async () => {
     try {
       const selectedRooms = onboardingData?.selected_rooms;
-      const user_id = userData.userid;
+      const user_id = userData?.userid;
 
       if (!user_id || !selectedRooms) return;
 

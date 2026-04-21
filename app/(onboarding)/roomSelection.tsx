@@ -204,7 +204,9 @@ const RoomSelection = () => {
         {/* ── unchanged rooms grid ── */}
         <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
           <View className='flex-row flex-wrap justify-between pb-4'>
-            {defaultRooms.map((room) => (
+            {defaultRooms
+            .filter(room => room.id !== "all")
+            .map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </View>

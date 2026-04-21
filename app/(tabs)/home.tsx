@@ -10,11 +10,11 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getCompleteDevices, getWattageInUse } from '../utils';
+import { getCompleteDevices, getWattageInUse } from '../../utils';
 
 
 const home = () => {
@@ -74,12 +74,12 @@ const home = () => {
     setLoadingDevices(true)
     try {
       // ALL devices
-      const all: DEVICE_DB[] | null = await getDevices(null);
+      const all: DEVICE_DB[] | null = await getDevices(null, userData.userid);
       const allList: DEVICE[] = all ? getCompleteDevices(all) : [];
       setAllDevices(allList);
 
       // (filtered)
-      const filtered: DEVICE_DB[] | null = await getDevices(activeTab === "all" ? null : Number(activeTab));
+      const filtered: DEVICE_DB[] | null = await getDevices(activeTab === "all" ? null : Number(activeTab), userData.userid);
       const filteredList: DEVICE[] = filtered ? getCompleteDevices(filtered) : [];
 
       setDevices(filteredList);
@@ -155,9 +155,13 @@ const home = () => {
   }, [userData])
 
 
-  useEffect(() => {
-    fetchDevices()
-  }, [activeTab])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!userData?.userid) return;
+      fetchDevices()
+    }, [activeTab, userData])
+  )
 
 
   // if (loadingRooms || !session) {
@@ -183,7 +187,7 @@ const home = () => {
           </View>
           <View className='w-[62%]'>
             <AppText className='text-[20px] mb-1 font-bold'>Hi 👋, {userData && userData?.username || "Guest"}</AppText>
-            <AppText className='text-sm text-[#838A8F]'>{new Date().toLocaleDateString('en-US', { weekday: 'long' })},{" "}{new Date().getDate()} {new Date().getFullYear()}</AppText>
+            <AppText className='text-sm text-[#838A8F]'>{new Date().toLocaleDateString('en-US', { weekday: 'long' })}{" "}{new Date().getDate()} {new Date().toLocaleString('en-US', {month: 'long'})}, {new Date().getFullYear()}</AppText>
           </View>
           <View className='w-[20%]'>
             <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/settings")}>
@@ -252,13 +256,13 @@ const home = () => {
             ) : (
               <>
                 <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
-                  className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-2 items-center justify-center min-h-[108px]'>
+                  className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-4 items-center justify-center min-h-[108px]'>
                   <Image source={IMAGES.thunderIllustration} resizeMode='contain' className='w-16 h-12 mb-3 opacity-30' />
                   <AppText className='font-bold text-black text-sm mb-1'>No appliances added yet</AppText>
                   <AppText className='text-[#838A8F] text-xs text-center mb-3'>Add your first device to start tracking energy usage</AppText>
-                  <TouchableOpacity onPress={() => router.push('/')}
+                  <TouchableOpacity onPress={() => router.push('/rooms')}
                     className='bg-green-500 px-5 py-2 rounded-full'>
-                    <AppText className='text-white text-xs font-bold'>+ Add Appliance</AppText>
+                    <AppText className='text-white text-xs font-bold'>+ Add Device</AppText>
                   </TouchableOpacity>
                 </View>
               </>
@@ -270,7 +274,7 @@ const home = () => {
           const usedW = getWattageInUse(devices);
           const remaining = totalW - usedW;
           const isOver = usedW > totalW;
-          console.log(devices)
+          // console.log(devices)
           const isAnyDeviceOn = devices.some(dev => dev.is_on);
 
           return (
@@ -382,10 +386,10 @@ const home = () => {
                     }}
                     className='relative h-[180px] rounded-[20px] py-6 w-[48%] bg-[#EDEDED] items-center justify-center border border-dashed border-[#bbbbbb]'>
                     <View className='items-center justify-center'>
-                      <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#d0d0d0] rounded-full mb-4 items-center justify-center'>
-                        <AntDesign name="plus" size={32} color="black" />
+                      <View className='w-[60px] h-[60px] bg-[#e7e7e7] border border-dashed border-[#bbbbbb] rounded-full mb-4 items-center justify-center'>
+                        <AntDesign name="plus" size={28} color="black" />
                       </View>
-                      <AppText className='text-[16px] font-semibold text-secondary-v1 mb-1'>Add New Device</AppText>
+                      <AppText className='text-[14px] font-semibold text-secondary-v1 mb-1'>Add New Device</AppText>
                     </View>
                   </Pressable>
                 }
@@ -397,8 +401,16 @@ const home = () => {
                         <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} key={item.id} />
                       )
                     }) : (
-                      // <AppText>No rooms found</AppText>
-                      <></>
+                      activeTab === "all" && 
+                      <>
+                        <View className='w-full items-center justify-center py-12'>
+                          <AntDesign name="bulb" size={48} color="#ccc" />
+                          <AppText className='font-bold text-black text-sm mb-1 mt-4'>No devices found</AppText>
+                          <AppText className='text-[#838A8F] text-xs text-center leading-5'>
+                              Go to home and add up devices in one of the room.
+                          </AppText>
+                        </View>
+                      </>
                     )
                 }
 
