@@ -324,7 +324,8 @@ const home = () => {
           ]}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingVertical: 4, gap: 6 }}
-          className='max-h-10'
+          className='max-h-12'
+          style={{overflow:"visible"}}
           renderItem={({ item }) => {
             if (String(item.id) === "add_new") {
               return (

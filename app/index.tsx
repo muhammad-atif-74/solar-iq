@@ -16,7 +16,7 @@ const index = () => {
         <SafeAreaView className='bg-accent h-screen'>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1 }}
-                className='px-1'
+                className='px-2'
             >
                 <View className='flex-1 justify-between'>
                     <View className='h-[400px]'>
@@ -39,7 +39,7 @@ const index = () => {
                             Manage your home from anytime, anywhere.
                         </AppText>
 
-                        <CustomButton title='Continue' onPress={() => { router.push('/signIn') }} />
+                        <CustomButton extraClasses="!px-2" title='Continue' onPress={() => { router.push('/signIn') }} />
                     </View>
                 </View>
             </ScrollView>
