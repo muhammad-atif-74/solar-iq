@@ -94,33 +94,20 @@ const home = () => {
 
   const toggleDeviceStatusOnOff = async (id: number, status: boolean) => {
     try {
-      setDevices(prev =>
-        prev.map(device =>
-          device.device_id === id
-            ? { ...device, is_on: status }
-            : device
-        )
-      );
-
+      setDevices(prev => prev.map(device => device.device_id === id ? { ...device, is_on: status } : device));
+      setAllDevices(prev => prev.map(device => device.device_id === id ? { ...device, is_on: status } : device)); // add this
+  
       await toggleDeviceStatus(id, status);
-
     } catch (err) {
       console.log(err);
-
-      // revert if failed
-      setDevices(prev =>
-        prev.map(device =>
-          device.device_id === id
-            ? { ...device, is_on: !status }
-            : device
-        )
-      );
-
+      setDevices(prev => prev.map(device => device.device_id === id ? { ...device, is_on: !status } : device));
+      setAllDevices(prev => prev.map(device => device.device_id === id ? { ...device, is_on: !status } : device)); // and revert this too
       Alert.alert("Error", "Something went wrong while toggling.");
     }
   };
 
   const handleToggleAll = async (status: boolean) => {
+    console.log("HANDLE TOGGLE: ", status)
     try {
 
       await toggleAllDevicesStatus(status);
@@ -128,6 +115,8 @@ const home = () => {
       setDevices(prev =>
         prev.map(device => ({ ...device, is_on: status }))
       )
+      setAllDevices(prev => prev.map(device => ({ ...device, is_on: status })));
+
     }
     catch (err) {
       Alert.alert("Error", "Something went wrong while toggling.");
@@ -200,8 +189,8 @@ const home = () => {
         {
           loadingDevices ? (
             <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
-              className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-6'></View>
-          ) : (devices.length > 0 ?
+              className='p-6 w-full rounded-[20px] bg-[#F5F5F5] mb-6 h-32'></View>
+          ) : (allDevices.length > 0 ?
             (
               <>
                 <View style={{ shadowColor: '#333', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.4, shadowRadius: 2, elevation: 4 }}
@@ -212,7 +201,7 @@ const home = () => {
                     <View>
                       <AppText className='text-[#838A8F] text-sm mb-1'>Currently in use</AppText>
                       <AppText className='font-bold text-[32px] text-black leading-none'>
-                        {getWattageInUse(devices)}
+                        {getWattageInUse(allDevices)}
                         <AppText className='font-normal text-base text-[#838A8F]'> W</AppText>
                       </AppText>
                     </View>
@@ -230,7 +219,7 @@ const home = () => {
                   {/* Progress bar */}
                   {homeData?.has_solar && (() => {
                     const totalW = homeData.solar_capacity_kw * 1000;
-                    const usedW = getWattageInUse(devices);
+                    const usedW = getWattageInUse(allDevices);
                     const pct = Math.min((usedW / totalW) * 100, 100);
                     const remaining = totalW - usedW;
                     const isOver = usedW > totalW;
@@ -269,13 +258,13 @@ const home = () => {
             )
           )
         }
-        {(homeData?.has_solar && devices.length > 0) && (() => {
+        {(homeData?.has_solar && allDevices.length > 0) && (() => {
           const totalW = homeData.solar_capacity_kw * 1000;
-          const usedW = getWattageInUse(devices);
+          const usedW = getWattageInUse(allDevices);
           const remaining = totalW - usedW;
           const isOver = usedW > totalW;
           // console.log(devices)
-          const isAnyDeviceOn = devices.some(dev => dev.is_on);
+          const isAnyDeviceOn = allDevices.some(dev => dev.is_on);
 
           return (
             <View className='flex flex-row items-center justify-between mb-6 mt-1 '>

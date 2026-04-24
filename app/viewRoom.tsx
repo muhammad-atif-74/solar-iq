@@ -106,7 +106,7 @@ const viewRoom = () => {
                     onPress: async () => {
                         try {
                             await deleteDevice(id);
-                            fetchDevices("all", userData.userid)
+                            fetchDevices(roomData.db_id, userData.userid)
 
                         } catch (err) {
                             Alert.alert("Error", "Failed to delete device");
@@ -120,7 +120,7 @@ const viewRoom = () => {
     return (
         <SafeAreaView className="bg-accent h-screen">
             <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 48 }} refreshControl={
-                <RefreshControl refreshing={devicesLoading} onRefresh={fetchDevices} />
+                <RefreshControl refreshing={devicesLoading} onRefresh={ () => fetchDevices(roomData.db_id, userData?.userid)} />
             }>
                 <View className='flex flex-row items-center justify-between mb-6'>
                     <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} className='w-10 h-10 rounded-full overflow-hidden bg-secondary-v1 p-1 flex items-center justify-center'>

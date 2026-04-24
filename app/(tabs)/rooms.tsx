@@ -337,7 +337,7 @@ const rooms = () => {
                       <AppText className={`text-xl font-bold text-[#333] `}>
                         {item.room_name}
                       </AppText>
-                      <AppText className='text-sm font-semibold text-[#464646]'>{devices.length > 0 && devices.filter(d => d.room_id == item.db_id).length} Device{devices.length > 0 && devices.filter(d => d.room_id == item.db_id).length > 1 ? 's' : ''}</AppText>
+                      <AppText className='text-sm font-semibold text-[#464646]'>{devices.length > 0 ? devices.filter(d => d.room_id == item.db_id).length : 0} Device{devices.length > 0 && devices.filter(d => d.room_id == item.db_id).length > 1 ? 's' : ''}</AppText>
                     </View>
                     <View className='ms-auto'>
                       <TouchableOpacity activeOpacity={0.7} onPress={() => handleDeleteRoom(item.db_id)} className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
