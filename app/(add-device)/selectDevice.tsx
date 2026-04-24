@@ -12,6 +12,102 @@ import { Alert, TouchableOpacity, View } from 'react-native'
 import { FlatList } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+const DeviceList = ({ item, deviceQty, increment, decrement }:
+    {
+        item: Device_Template,
+        deviceQty: Record<string, number>,
+        increment: (id: string) => void,
+        decrement: (id: string) => void
+    }) => {
+
+    const qty = deviceQty[item.id] || 0
+    const isSelected = qty > 0
+
+
+    return (
+        <TouchableOpacity
+            activeOpacity={0.7}
+            className={`rounded-lg px-[18px] py-3 mb-2  ${qty > 0 ? 'bg-secondary-v1' : 'bg-[#F7F7F7]'
+                }`}
+            onPress={() => { if (!isSelected) increment(item.id) }}
+        >
+            <View className='flex-row items-center gap-3'>
+                <View className='w-12 h-12 p-2 bg-secondary-v2 rounded-lg flex items-center justify-center'>
+                    <DisplayIcon name={item.icon} />
+                </View>
+                <View>
+
+                    <AppText className={`text-base flex-1 my-0 ${qty > 0 ? 'text-white' : 'text-[#636363]'}`}>
+                        {item.name}
+                    </AppText>
+
+                    <AppText className={`text-xs flex-1 my-0 ${qty > 0 ? 'text-white' : 'text-[#636363]'}`}>
+                        {item.default_wattage_w} W
+                    </AppText>
+                </View>
+                <View className='text-end ms-auto'>
+                    {
+                        isSelected &&
+                        <View className='flex-row items-center mt-3 justify-end'>
+                            {/* − button */}
+                            <TouchableOpacity
+                                onPress={(e) => { e.stopPropagation(); decrement(item.id) }}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+                                style={{
+                                    backgroundColor: 'rgba(255,255,255,0.25)',
+                                    borderRadius: 100,
+                                    width: 28,
+                                    height: 28,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialCommunityIcons name="minus" size={16} color="#fff" />
+                            </TouchableOpacity>
+
+                            {/* qty label */}
+                            <AppText
+                                style={{
+                                    color: '#fff',
+                                    fontWeight: '700',
+                                    fontSize: 15,
+                                    minWidth: 28,
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {qty}
+                            </AppText>
+
+                            {/* + button */}
+                            <TouchableOpacity
+                                onPress={(e) => { e.stopPropagation(); increment(item.id) }}
+
+                                hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+                                style={{
+                                    backgroundColor: 'rgba(255,255,255,0.25)',
+                                    borderRadius: 100,
+                                    width: 28,
+                                    height: 28,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialCommunityIcons name="plus" size={16} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    }
+
+
+
+                </View>
+            </View>
+
+        </TouchableOpacity>
+    )
+}
+
 
 const selectDevice = () => {
     const { session, userData } = useGlobalContext();
@@ -20,7 +116,7 @@ const selectDevice = () => {
 
     const [activeTab, setActiveTab] = useState("all")
     const [devices, setDevices] = useState<Device_Template[] | []>([])
-    const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([])
+    const [deviceQty, setDeviceQty] = useState<Record<string, number>>({})
     const [addingDevices, setAddingDevices] = useState(false)
 
 
@@ -28,16 +124,20 @@ const selectDevice = () => {
     // user_id, room_id, appliance_id, is_on is_custom, custom_name, wattage_override. 
 
     const handleContinue = async () => {
-        if(selectedDeviceIds.length === 0) return
+        const selectedIds = Object.keys(deviceQty)
+        if (selectedIds.length === 0) return
         if (!session || !userData) return
-        const devices: Omit<DEVICE_DB, "id">[] = selectedDeviceIds.map(device_id => ({
-            appliance_id: device_id,
-            user_id: userData?.userid,
-            room_id: Number(room_id),
-            is_on: false,
-            is_custom: false,
-            category_id: null
-        }))
+
+        const devices: Omit<DEVICE_DB, "id">[] = selectedIds.flatMap(device_id =>
+            Array.from({ length: deviceQty[device_id] }, () => ({
+                appliance_id: device_id,
+                user_id: userData.userid,
+                room_id: Number(room_id),
+                is_on: false,
+                is_custom: false,
+                category_id: null
+            }))
+        )
 
         try {
             setAddingDevices(true)
@@ -65,17 +165,18 @@ const selectDevice = () => {
 
     }, [activeTab, DEVICE_CATALOG])
 
-    const handleSelectDevice = (id: string) => {
-        setSelectedDeviceIds(prev => {
-            if (prev.includes(id)) {
-                // remove item
-                return prev.filter(item => item !== id);
-            } else {
-                // add item
-                return [...prev, id];
-            }
-        });
-    };
+
+    const increment = (id: string) => setDeviceQty(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }))
+    const decrement = (id: string) => setDeviceQty(prev => {
+        const current = prev[id] || 0
+        if (current <= 1) {
+            // remove from selection entirely
+            const next = { ...prev }
+            delete next[id]
+            return next
+        }
+        return { ...prev, [id]: current - 1 }
+    })
 
 
     return (
@@ -91,7 +192,7 @@ const selectDevice = () => {
                             <AppText className='text-3xl font-bold my-0 text-secondary-v1'>Select Devices</AppText>
                         </View>
                         <View className='w-10'>
-                            
+
                         </View>
                     </View>
 
@@ -134,42 +235,15 @@ const selectDevice = () => {
                     contentContainerStyle={{ paddingBottom: 40 }}
                     style={{ maxHeight: '72%' }}
                     renderItem={({ item }) => (
-                        <TouchableOpacity
-                            activeOpacity={0.7}
-                            className={`rounded-lg px-[18px] py-3 mb-2  ${selectedDeviceIds.includes(item.id) ? 'bg-secondary-v1' : 'bg-[#F7F7F7]'
-                                }`}
-                            onPress={() => handleSelectDevice(item.id)}
-                        >
-                            <View className='flex-row items-center gap-3'>
-                                <View className='w-12 h-12 p-2 bg-secondary-v2 rounded-lg flex items-center justify-center'>
-                                    <DisplayIcon name={item.icon} />
-                                </View>
-                                <View>
-
-                                    <AppText className={`text-base flex-1 my-0 ${selectedDeviceIds.includes(item.id) ? 'text-white' : 'text-[#636363]'
-                                        }`}>
-                                        {item.name}
-                                    </AppText>
-
-                                    <AppText className={`text-xs flex-1 my-0 ${selectedDeviceIds.includes(item.id) ? 'text-white' : 'text-[#636363]'
-                                        }`}>
-                                        {item.default_wattage_w} W
-                                    </AppText>
-                                </View>
-                            </View>
-
-
-
-
-                        </TouchableOpacity>
+                        <DeviceList item={item} deviceQty={deviceQty} increment={increment} decrement={decrement} />
                     )}
                 />
 
                 <CustomButton
-                    title={`Add (${selectedDeviceIds.length}) devices`}
-                    onPress={handleContinue || selectedDeviceIds.length < 1}
+                    title={`Add devices`}
                     extraClasses=''
-                    isDisable={addingDevices}
+                    onPress={handleContinue}
+                    isDisable={addingDevices || Object.keys(deviceQty).length === 0}
                     isLoading={addingDevices}
                 />
             </View>

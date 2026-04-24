@@ -179,7 +179,7 @@ const viewRoom = () => {
                         !devicesLoading && devices.length > 0 ?
                             devices.map(item => {
                                 return (
-                                    <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} onDelete={(id) => handleDeleteDevice(id)} key={item.id} />
+                                    <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} onDelete={(id) => handleDeleteDevice(id)} key={item.device_id} />
                                 )
                             }) : (
                                 <View className="flex-1 items-center justify-center py-16 px-6">

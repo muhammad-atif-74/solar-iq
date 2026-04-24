@@ -388,7 +388,7 @@ const home = () => {
                   devices.length > 0 ?
                     devices.map(item => {
                       return (
-                        <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} key={item.id} />
+                        <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} key={item.device_id} />
                       )
                     }) : (
                       activeTab === "all" && 
