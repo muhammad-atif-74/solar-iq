@@ -312,7 +312,7 @@ const home = () => {
             { id: "add_new", room_name: "Add New" } as unknown as UserRoom
           ]}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingVertical: 4, gap: 6 }}
+          contentContainerStyle={{ paddingVertical: 4, gap: 6, paddingRight: 12 }}
           className='max-h-12'
           style={{overflow:"visible"}}
           renderItem={({ item }) => {
@@ -321,9 +321,12 @@ const home = () => {
                 <TouchableOpacity
                   onPress={openAddRoomSheet}
                   className='relative px-4 pb-2'
+                  style={{ flexShrink: 0, alignSelf: 'flex-start' }}
                   activeOpacity={0.8}
                 >
-                  <AppText className='font-semibold text-[#7D7D7D]'>+ Add Room</AppText>
+                  <AppText numberOfLines={1} className='font-semibold text-[#7D7D7D]'>
+                    + Add Room
+                  </AppText>
                 </TouchableOpacity>
               );
             }
@@ -331,9 +334,10 @@ const home = () => {
               <TouchableOpacity
                 onPress={() => setActiveTab(item.id)}
                 className='relative px-4 pb-2'
+                style={{ flexShrink: 0, alignSelf: 'flex-start' }}
                 activeOpacity={0.8}
               >
-                <AppText className={`font-semibold ${activeTab === item.id ? 'text-secondary-v1 !font-poppinsBold' : 'text-[#7D7D7D]'}`}>
+                <AppText numberOfLines={1} className={`font-semibold ${activeTab === item.id ? 'text-secondary-v1 !font-poppinsBold' : 'text-[#7D7D7D]'}`}>
                   {item.room_name}
                 </AppText>
                 {activeTab === item.id && (

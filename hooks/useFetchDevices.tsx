@@ -1,34 +1,25 @@
 import { getDevices } from "@/lib/supbase";
 import { DEVICE } from "@/types";
 import { getCompleteDevices } from "@/utils";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export const useFetchDevices = () => {
-  const [allDevices, setAllDevices] = useState<DEVICE[]>([]);
   const [devices, setDevices] = useState<DEVICE[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchDevices = async (activeTab: string = "all", user_id: number | null = null) => {
+  const fetchDevices = useCallback(async (roomId: number | null = null, userId: string | null = null) => {
     setLoading(true);
     try {
-      const all = await getDevices(null, user_id);
-      const allList = all ? getCompleteDevices(all) : [];
-
-      setAllDevices(allList);
-
-      const filteredList =
-        activeTab === "all"
-          ? allList
-          : allList.filter(d => d.room_id === Number(activeTab));
-
-      setDevices(filteredList);
+      const data = await getDevices(roomId, userId);
+      const deviceList = data ? getCompleteDevices(data) : [];
+      setDevices(deviceList);
 
     } catch (err) {
       console.log(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  return { devices, allDevices, loading, fetchDevices };
+  return { devices, loading, fetchDevices };
 };

@@ -1,45 +1,62 @@
+import EditRoomBottomSheet from '@/components/bottomSheets/EditRoomBottomSheet'
 import { AppText } from '@/components/ui/app-text'
 import Device from '@/components/ui/Device'
 import DisplayIcon from '@/components/ui/DisplayIcon'
 import { useGlobalContext } from '@/context/GlobalProvider'
 import { useFetchDevices } from '@/hooks/useFetchDevices'
-import { deleteDevice, deleteRoom, toggleDeviceStatus } from '@/lib/supbase'
-import { DEVICE } from '@/types'
+import { deleteDevice, deleteRoom, toggleDeviceStatus, updateRoomData } from '@/lib/supbase'
+import { Detailed_Room, DEVICE } from '@/types'
 import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
+import BottomSheet from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const viewRoom = () => {
-    const {userData} = useGlobalContext();
+const ViewRoom = () => {
+    const { userData } = useGlobalContext();
     const { room } = useLocalSearchParams(); // it returns string or string[]
     const { fetchDevices, devices: fetchedDevices, loading: devicesLoading } = useFetchDevices()
 
-    const [devices, setDevices] = useState<DEVICE[] | []>([])
+    const editRoomBottomSheetRef = useRef<BottomSheet>(null);
 
 
     const roomValue = Array.isArray(room) ? room[0] : room; // if its array; returns its first element otherwise return as a whole.
 
-    const roomData = useMemo(() => {
+    const initialRoomData = useMemo(() => {
         return roomValue
             ? JSON.parse(decodeURIComponent(roomValue))
             : null;
     }, [roomValue]);
 
+    const [roomData, setRoomData] = useState<Detailed_Room | null>(initialRoomData);
+    const [devices, setDevices] = useState<DEVICE[]>([]);
+
+    useEffect(() => {
+        setRoomData(initialRoomData);
+    }, [initialRoomData]);
+
+    useEffect(() => {
+        setDevices(fetchedDevices);
+    }, [fetchedDevices]);
+
 
     useFocusEffect(
         useCallback(() => {
-            if (roomData?.db_id) {
-                fetchDevices(roomData.db_id, userData.userid);
+            if (roomData?.db_id && userData?.userid) {
+                fetchDevices(roomData.db_id, userData?.userid);
             }
-        }, [roomData?.db_id])
+        }, [fetchDevices, roomData?.db_id, userData?.userid])
     );
 
-    useEffect(() => {
-        setDevices(fetchedDevices.length > 0 ? fetchedDevices : [])
-    }, [fetchedDevices])
+    const editRoomSnapPoints = ['40%'];
+    const openEditRoomDataSheet = () => {
+        editRoomBottomSheetRef.current?.expand();
+    };
+    const closeEditRoomDataSheet = () => {
+        editRoomBottomSheetRef.current?.close();
+    };
 
 
     const toggleDeviceStatusOnOff = async (id: number, status: boolean) => {
@@ -53,11 +70,9 @@ const viewRoom = () => {
             );
 
             await toggleDeviceStatus(id, status);
-
         } catch (err) {
             console.log(err);
 
-            // revert if failed
             setDevices(prev =>
                 prev.map(device =>
                     device.device_id === id
@@ -106,7 +121,9 @@ const viewRoom = () => {
                     onPress: async () => {
                         try {
                             await deleteDevice(id);
-                            fetchDevices(roomData.db_id, userData.userid)
+                            if (roomData?.db_id && userData?.userid) {
+                                fetchDevices(roomData.db_id, userData?.userid)
+                            }
 
                         } catch (err) {
                             Alert.alert("Error", "Failed to delete device");
@@ -117,20 +134,42 @@ const viewRoom = () => {
             ]
         );
     };
+
+    const handleEditRoom = async (roomName: string) => {
+        if (!roomData?.db_id) return;
+
+        try {
+            const updatedRoomName = roomName.trim();
+            await updateRoomData(roomData.db_id, updatedRoomName);
+
+            setRoomData(prev => prev ? { ...prev, room_name: updatedRoomName } : prev);
+            closeEditRoomDataSheet();
+        } catch (err) {
+            Alert.alert("Error", "Something went wrong while updating room.");
+            console.log(err);
+        }
+    }
     return (
         <SafeAreaView className="bg-accent h-screen">
             <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 48 }} refreshControl={
-                <RefreshControl refreshing={devicesLoading} onRefresh={ () => fetchDevices(roomData.db_id, userData?.userid)} />
+                <RefreshControl refreshing={devicesLoading} onRefresh={() => roomData?.db_id && fetchDevices(roomData.db_id, userData?.userid)} />
             }>
-                <View className='flex flex-row items-center justify-between mb-6'>
-                    <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} className='w-10 h-10 rounded-full overflow-hidden bg-secondary-v1 p-1 flex items-center justify-center'>
+                <View className='relative flex flex-row items-center justify-between mb-6 min-h-12'>
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} className='w-10 h-10 rounded-full overflow-hidden bg-secondary-v1 p-1 flex items-center justify-center z-10'>
                         <MaterialCommunityIcons name='arrow-left' size={24} color={"#fff"} />
                     </TouchableOpacity>
-                    <View>
-                        <AppText className='text-3xl font-bold my-0 text-secondary-v1'>{roomData.room_name}</AppText>
+
+                    <View className='absolute inset-x-0 items-center px-20'>
+                        <AppText numberOfLines={1} className='text-3xl font-bold my-0 text-secondary-v1 text-center'>
+                            {roomData?.room_name}
+                        </AppText>
                     </View>
-                    <View className='w-10'>
-                        <TouchableOpacity activeOpacity={0.7} onPress={() => handleDeleteRoom(roomData.db_id)} className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
+
+                    <View className='flex-row items-center gap-2 z-10'>
+                        <TouchableOpacity activeOpacity={0.7} onPress={openEditRoomDataSheet} className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
+                            <DisplayIcon name={"pencil"} color='#616161' />
+                        </TouchableOpacity>
+                        <TouchableOpacity activeOpacity={0.7} onPress={() => roomData?.db_id && handleDeleteRoom(roomData.db_id)} className='w-12 h-12 bg-secondary-v2 rounded-full overflow-hidden flex items-center justify-center'>
                             <DisplayIcon name={"trash-can-outline"} color='#ff1010' />
                         </TouchableOpacity>
                     </View>
@@ -139,9 +178,9 @@ const viewRoom = () => {
                 <View className='w-full rounded-xl overflow-hidden h-48 mb-6 bg-gray-100'>
                     <Image
                         source={
-                            typeof roomData.image === "number"
+                            typeof roomData?.image === "number"
                                 ? roomData.image
-                                : { uri: roomData.image }
+                                : { uri: roomData?.image }
                         }
                         style={{ width: '100%', height: '100%', }}
                         contentFit='cover'
@@ -152,7 +191,7 @@ const viewRoom = () => {
                     <AppText className="text-secondary-v1 text-2xl font-bold">
                         Devices ({devices.length})
                     </AppText>
-                    <TouchableOpacity activeOpacity={0.8} onPress={() => { router.push(`/(add-device)/selectDevice?room_id=${roomData.db_id}`) }}>
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => { roomData?.db_id && router.push(`/(add-device)/selectDevice?room_id=${roomData.db_id}`) }}>
                         <View className='w-8 h-8 bg-secondary-v1 rounded-full overflow-hidden flex items-center justify-center'>
                             <DisplayIcon name={"plus"} color='#fff' />
                         </View>
@@ -174,9 +213,8 @@ const viewRoom = () => {
                 }
 
                 <View className='flex flex-row flex-wrap items-stretch gap-2 w-full mb-6'>
-
                     {
-                        !devicesLoading && devices.length > 0 ?
+                        devicesLoading ? null : devices.length > 0 ?
                             devices.map(item => {
                                 return (
                                     <Device device={item} toggleDeviceStatusOnOff={toggleDeviceStatusOnOff} onDelete={(id) => handleDeleteDevice(id)} key={item.device_id} />
@@ -195,7 +233,7 @@ const viewRoom = () => {
                                     </AppText>
 
                                     <TouchableOpacity
-                                        onPress={() => { { router.push(`/(add-device)/selectDevice?room_id=${roomData.db_id}`) } }}
+                                        onPress={() => { roomData?.db_id && router.push(`/(add-device)/selectDevice?room_id=${roomData.db_id}`) }}
                                         activeOpacity={0.8}
                                         className="flex-row items-center gap-2 bg-secondary-v1 px-6 py-3 rounded-2xl"
                                     >
@@ -210,8 +248,15 @@ const viewRoom = () => {
 
 
             </ScrollView>
+
+            <EditRoomBottomSheet
+                roomName={roomData?.room_name ?? ""}
+                onUpdateRoomData={handleEditRoom}
+                snapPoints={editRoomSnapPoints}
+                ref={editRoomBottomSheetRef}
+            />
         </SafeAreaView>
     )
 }
 
-export default viewRoom
+export default ViewRoom

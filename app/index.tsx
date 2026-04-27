@@ -39,7 +39,7 @@ const index = () => {
                             Manage your home from anytime, anywhere.
                         </AppText>
 
-                        <CustomButton extraClasses="!px-2" title='Continue' onPress={() => { router.push('/signIn') }} />
+                        <CustomButton extraClasses="w-full" title='Continue' onPress={() => { router.push('/signIn') }} />
                     </View>
                 </View>
             </ScrollView>
