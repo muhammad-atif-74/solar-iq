@@ -142,7 +142,7 @@ const rooms = () => {
 
     fetchHome()
     fetchRooms()
-    fetchDevices("all", userData.userid)
+    fetchDevices(null, userData.userid)
   }, [userData])
 
   return (

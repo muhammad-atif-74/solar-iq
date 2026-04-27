@@ -246,6 +246,24 @@ export const deleteRoom = async (roomId: number) => {
     }
 }
 
+export const updateRoomData = async (roomId: number, roomName: string) => {
+    try {
+        const { data, error } = await supabase
+            .from("rooms")
+            .update({ room_name: roomName })
+            .eq("id", roomId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+    catch (err: any) {
+        console.error("Error updating room data:", err.message);
+        throw new Error(err.message);
+    }
+}
+
 export const addNewDevice = async (room_id: number, user_id: string, appliance_id: string | null, is_on: boolean, is_custom: boolean, custom_name: string | null, wattage_override: number | null) => {
     try {
         const { data, error } = await supabase.from("devices").insert({
@@ -274,7 +292,7 @@ export const addNewDevices = async (devices: Omit<DEVICE_DB, "id">[]) => {
     }
 }
 
-export const getDevices = async (room_id: number | null, user_id?: number | null): Promise<DEVICE_DB[] | null> => {
+export const getDevices = async (room_id: number | null, user_id?: string | null): Promise<DEVICE_DB[] | null> => {
     try {
         let query = supabase
             .from("devices")
